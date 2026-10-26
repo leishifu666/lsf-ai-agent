@@ -1,0 +1,4 @@
+interface:
+  display_name: "LSF-AI 调度"
+  short_description: "调度 Gemini、DeepSeek、Kimi 与智谱，支持浏览器、人工中转和可选 API"
+  default_prompt: "使用 $lsf-ai-agent，沿用已选产品与模式。设计和文案优先 AI Studio Gemini 3.1 Pro / High，文案可明确选择 3.8 Flash / High；前端实现和编码优先 DeepSeek，深度思考与智能搜索同时开启。Kimi 使用 K3 / 极致，智谱使用 GLM-5.3 / 极致并核对联网。图片仅 AI Studio Nano Banana 2.1 的 2K/4K，明确比例；普通 Gemini 网页禁用。仅明确选择 API 时使用贞贞接口。回收完整结果并在原项目验证，附件集中且默认不压缩；仅修改技能不发送模型任务。"
