@@ -1,5 +1,9 @@
 # LSF-AI 调度 Skill
 
+<p align="center">
+  <img src="./assets/lsf-ai-agent-cover.webp" alt="LSF-AI调度 Skill：视觉设计、文案写作、前端开发、根因分析、图像生成与结果验证" width="540">
+</p>
+
 把任务交给适合的外部模型，收回结果，再回到原项目完成应用和验证。适用于能够加载 `SKILL.md` 的 AI 编程助手；仓库提供任务规则、浏览器页面辅助和可选的 Gemini API 客户端。
 
 ## 支持范围
