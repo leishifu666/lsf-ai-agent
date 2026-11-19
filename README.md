@@ -22,6 +22,20 @@
 
 点名 Claude 做设计、代码、文案或评审，也走 Hark。同一任务改稿沿用原项目。
 
+## 环境准备
+
+按你要用的功能安装即可。
+
+| 工具 | 什么时候需要 | 下载与安装 |
+|---|---|---|
+| Git | 用下方的 `git clone` 安装技能 | [下载 Git](https://git-scm.com/downloads/) |
+| Antigravity CLI（`agy`） | 走 CLI 的文案、评审或复杂编程。装好后运行 `agy` 登录，再用 `agy models` 查看可用型号 | [CLI 官方安装步骤](https://antigravity.google/docs/getting-started?tab=cli#download-and-install) |
+| Ego Lite（含 `ego-browser` 技能） | 让助手操作 AI Studio、Hark 等网页。完成首次设置后，在助手里选用 `ego-browser` | [下载 Ego Lite](https://lite.ego.app/download) · [Windows 安装指南](https://lite.ego.app/document/en/docs/windows/quick-start) |
+| Node.js 18+ | 运行本地 JavaScript 脚本或测试，脚本只用 Node.js 内置模块 | [下载 Node.js](https://nodejs.org/en/download) |
+| Python 3.10+ | 使用可选的贞贞 API 或运行 Python 测试 | [下载 Python](https://www.python.org/downloads/) |
+
+[AI Studio](https://aistudio.google.com/prompts/new_chat) 和 [Hark](https://hark.com/projects/new) 按需网页登录。你也可以用助手已有的浏览器工具，或让助手准备提示词，自己复制粘贴。
+
 ## 安装与使用
 
 把仓库克隆到助手的技能目录，保留仓库内的文件结构。
@@ -38,12 +52,9 @@ Codex 也可以放在 `$HOME/.codex/skills/lsf-ai-agent`。本地如果已经改
 使用 $lsf-ai-agent，在 AI Studio 生成 16:9、2K 的图片。
 ```
 
-## 环境准备
+### 贞贞 API（可选）
 
-- **Antigravity CLI** 本机装好并登录 `agy`，用 `agy models` 看当前账号能用的档位。
-- **浏览器操作** 需要另装 Ego Lite（搭配 `ego-browser` 技能）或使用宿主支持的浏览器工具。页面辅助脚本使用助手已经打开的浏览器。有时只想自己操作页面，也可以让助手准备一份提示词，手动粘贴。
-- **JS 脚本** Node.js 18+，只用内置模块，不用 `npm install`。
-- **可选贞贞 API** 端点固定为 `https://ai.t8star.org/v1`，基于 Python 3.10+ 标准库，只在你明确要求走 API 时启用。需自备账号和密钥。Windows 可以在仓库根目录运行以下命令，输入时密钥会隐藏。
+只在你明确要求走贞贞 API 时启用。需自备账号和密钥。Windows 可以在仓库根目录运行以下命令，输入时密钥会隐藏。
 
 ```powershell
 python -B -X utf8 scripts/credential_store.py --set
