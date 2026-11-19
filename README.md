@@ -24,19 +24,27 @@
 
 ## 环境准备
 
-按你要用的功能安装即可。
+先装好默认浏览器流程需要的 Ego Lite 和 `ego-browser`。其他工具按用途准备。
 
-| 工具 | 什么时候需要 | 下载与安装 |
-|---|---|---|
-| Git | 用下方的 `git clone` 安装技能 | [下载 Git](https://git-scm.com/downloads/) |
-| Antigravity CLI（`agy`） | 走 CLI 的文案、评审或复杂编程。装好后运行 `agy` 登录，再用 `agy models` 查看可用型号 | [CLI 官方安装步骤](https://antigravity.google/docs/getting-started?tab=cli#download-and-install) |
-| Ego Lite（含 `ego-browser` 技能） | 让助手操作 AI Studio、Hark 等网页。完成首次设置后，在助手里选用 `ego-browser` | [下载 Ego Lite](https://lite.ego.app/download) · [Windows 安装指南](https://lite.ego.app/document/en/docs/windows/quick-start) |
-| Node.js 18+ | 运行本地 JavaScript 脚本或测试，脚本只用 Node.js 内置模块 | [下载 Node.js](https://nodejs.org/en/download) |
-| Python 3.10+ | 使用可选的贞贞 API 或运行 Python 测试 | [下载 Python](https://www.python.org/downloads/) |
+| 安装要求 | 工具或账号 | 什么时候需要 | 官方入口 |
+|---|---|---|---|
+| **必装** | Ego Lite | 让助手操作 AI Studio、Hark 等网页 | [下载 Ego Lite](https://lite.ego.app/download) · [Windows 安装指南](https://lite.ego.app/document/en/docs/windows/quick-start) |
+| **必装** | `ego-browser` 技能 | 随 Ego Lite 首次设置安装。完成后重开助手，确认能选到 `ego-browser` | [启用浏览器技能](https://lite.ego.app/document/en/docs/skills#load-the-browser-skill) |
+| **推荐选装** | Antigravity CLI（`agy`） | 账号支持推荐模型时，优先用 CLI 做文案、评审和复杂编程。装好后运行 `agy` 登录 | [CLI 官方安装步骤](https://antigravity.google/docs/getting-started?tab=cli#download-and-install) |
+| 按需账号 | Google AI Pro / Ultra | 使用推荐的 CLI Gemini 4 模型时，个人账号建议用正式付费的 Pro 或 Ultra。用 `agy models` 确认可用型号 | [Google AI 会员方案](https://one.google.com/about/google-ai-plans/) · [CLI 模型权限](https://antigravity.google/docs/models) |
+| 按需安装 | Git | 用下方的 `git clone` 安装技能时需要 | [下载 Git](https://git-scm.com/downloads/) |
+| 按需安装 | Node.js 18+ | 运行本地 JavaScript 脚本或测试，脚本只用 Node.js 内置模块 | [下载 Node.js](https://nodejs.org/en/download) |
+| 按需安装 | Python 3.10+ | 使用可选的贞贞 API 或运行 Python 测试 | [下载 Python](https://www.python.org/downloads/) |
 
-[AI Studio](https://aistudio.google.com/prompts/new_chat) 和 [Hark](https://hark.com/projects/new) 按需网页登录。你也可以用助手已有的浏览器工具，或让助手准备提示词，自己复制粘贴。
+没有 Pro / Ultra 的个人账号可以先跳过 CLI，按任务直接指定 [AI Studio](https://aistudio.google.com/prompts/new_chat) 或 [Hark](https://hark.com/projects/new)，需要时在网页里登录。
 
 ## 安装与使用
+
+想一次装齐，可以把这句话发给编程助手。
+
+```text
+帮我从 https://github.com/leishifu666/lsf-ai-agent 安装这个技能，再按 README 的官方下载链接一次装齐 Git、Ego Lite、ego-browser、Antigravity CLI、Node.js 和 Python。已装的跳过，需要登录时叫我。
+```
 
 把仓库克隆到助手的技能目录，保留仓库内的文件结构。
 
