@@ -12,6 +12,7 @@
 |---|---|---|
 | 日常文案与文案评审 | Antigravity CLI | Gemini 4 Hydrogen / High，额度用尽切 AI Studio Hydrogen / High |
 | 复杂编程方案、架构与技术选型 | Antigravity CLI | Gemini 4 Neon / High，[按额度切换](references/antigravity.md#额度用尽时) |
+| 代码视频、强动效与动态视觉 | Hark | Claude Opus 5.5，[新项目优先，普通聊天兜底](references/hark.md) |
 | 前端审美与视觉设计 | Google AI Studio / Hark | Gemini 3.1 Pro / High 或 Claude Opus 5.5 |
 | 前端实现、常规编码与修复 | DeepSeek 网页 | 深度思考＋智能搜索 |
 | 可选的设计、文案、综合任务 | Kimi / 智谱清言 | K3 / 极致；GLM-5.3 / 极致 |

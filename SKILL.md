@@ -1,6 +1,6 @@
 ---
 name: lsf-ai-agent
-description: 委派外部模型并在原项目验证。Antigravity CLI 的 Gemini 4 Hydrogen / High 负责日常文案和评审，Neon / High 负责复杂编程方案。支持 CLI 与 AI Studio 的额度兜底、Gemini 3.1 Pro 与 Hark Claude 的前端审美分工，以及 DeepSeek、Kimi、智谱、用户中转、可选贞贞 API 和 AI Studio 生图。仅修改技能时不发送模型任务。
+description: 委派外部模型并在原项目验证。Antigravity CLI 的 Gemini 4 Hydrogen / High 负责日常文案和评审，Neon / High 负责复杂编程方案，支持 AI Studio 额度兜底。Hark 的 Claude Opus 5.5 负责代码视频与强动效，也是前端审美的可选渠道。支持 DeepSeek、Kimi、智谱、用户中转、可选贞贞 API 和 AI Studio 生图。仅修改技能时不发送模型任务。
 license: MIT
 ---
 
@@ -14,6 +14,7 @@ license: MIT
 
 | 任务 | 默认选择 | 配置与可选项 |
 |---|---|---|
+| 代码视频、强动效与动态视觉 | Hark 的 Claude Opus 5.5 | 新项目优先，项目提交失败时切普通聊天 |
 | 视觉方向、前端审美、版式、设计审查 | AI Studio Gemini 3.1 Pro / High | 可明确选择 Hark 的 Claude Opus 5.5，或 Kimi K3 / 极致 |
 | 日常文案、改写、标题、营销文字、UX 文本与文案评审 | Antigravity CLI 的 Gemini 4 Hydrogen / High | CLI 额度用尽后切 AI Studio Hydrogen / High |
 | 前端实现、UI/CSS、响应式与交互代码 | DeepSeek | 深度思考与智能搜索同时开启；可明确选择 Kimi K3 / 极致 |
@@ -25,7 +26,9 @@ license: MIT
 
 型号、思考档位和额度以当前账号为准。只有当前型号额度耗尽或明确不可用，且本轮已结束并无有效结果时，才沿表内顺序切换。每个入口和型号组合在同一轮只提交一次。
 
-普通 Gemini 网页 `gemini.google.com/app` 在此配置中禁用，不因 AI Studio 出错自动退回。Midjourney 只准备提示词与人工提交材料，见 [人工交接](references/midjourney.md)。本版本不提供视频与动效的独立默认渠道；脚本对未支持的任务返回错误，不静默改路由。
+用户点名 Claude、Opus 或 Hark 做文案、评审、复杂编程或前端时，走 [Hark](references/hark.md)。使用当前账号已配置的默认 Claude Opus 5.5，核对项目和本轮提交状态。
+
+普通 Gemini 网页 `gemini.google.com/app` 在此配置中禁用。Midjourney 只准备提示词与人工提交材料，见 [人工交接](references/midjourney.md)。
 
 ## 交接方式
 
@@ -44,7 +47,7 @@ license: MIT
 |---|---|---|
 | Antigravity CLI | `agy` | [精确型号、调用与额度兜底](references/antigravity.md) |
 | Google AI Studio | `https://aistudio.google.com/prompts/new_chat` | [模型、思考、联网、比例与分辨率](references/aistudio.md) |
-| Hark | `https://hark.com/projects/new` | [Claude 前端审美与结果回收](references/hark.md) |
+| Hark | `https://hark.com/projects/new` | [Claude Opus 5.5、代码视频、强动效与普通聊天兜底](references/hark.md) |
 | DeepSeek | `https://chat.deepseek.com/` | [深度思考与智能搜索](references/deepseek.md) |
 | Kimi | `https://www.kimi.com/` | [K3、思考强度与工具](references/kimi.md) |
 | 智谱清言 | `https://chatglm.cn/` | [GLM-5.3、极致与联网](references/zhipu.md) |
@@ -55,7 +58,7 @@ license: MIT
 
 1. 明确目标、已确认事实、修改范围与交付格式。用户提供现有网站、课程、商品或活动时先查已有资料，不虚构价格、功能、人数或承诺。材料不可读时说明缺项。
 2. 仅发送必要源文件、截图与素材，不整仓发送，不携带密钥、Cookie、登录资料或无关历史。localhost 与本机路径不能代替外部模型实际收到的附件。
-3. 先核对型号，再配置思考与工具；有选择器时先选型号，以界面回读为准。配置重置、翻译和账号权限会影响可用项。版本身份不能靠模型自述证明。
+3. Hark 直接使用已配置的站点默认模型。其他有选择器的入口先选型号，再配置思考与工具，以界面回读为准。版本身份不能靠模型自述证明。
 4. 网页提交前核对输入框、草稿、提示全文与配置，保留用户草稿并记录上轮回答身份。CLI 提交前核对提示和实际型号。每个入口与型号组合只提交一次。
 5. 只读取本轮最后的完整回答。验证新回答身份、完成状态、非空正文/最终图片与错误状态。出现思考状态、链接、已发送或预览图不等于完成；不展开、读取或输出模型内部推理。
 6. 联网任务核对搜索开关和本轮真实检索/来源引用。普通超链接不足以证明检索。代码回收后检查事实、接口、文件与测试；模型说“已修改/已测试”不能替代本地实施。

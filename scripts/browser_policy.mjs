@@ -4,7 +4,12 @@ export const BROWSER_PROVIDERS = Object.freeze({
   kimi: {url: 'https://www.kimi.com/', enabled: true},
   deepseek: {url: 'https://chat.deepseek.com/', enabled: true},
   zhipu: {url: 'https://chatglm.cn/', enabled: true},
-  hark: {url: 'https://hark.com/projects/new', enabled: true, newProjectPerConversation: true},
+  hark: {
+    url: 'https://hark.com/projects/new',
+    fallbackUrl: 'https://hark.com/chat',
+    enabled: true,
+    newProjectPerConversation: true,
+  },
   gemini_web: {url: 'https://gemini.google.com/app', enabled: false, reason: '用户已暂时禁用 Gemini 普通网页版；按任务使用 Antigravity CLI 或 AI Studio'},
   midjourney: {url: 'https://www.midjourney.com/', enabled: false, reason: '按用户避免封号的选择，仅准备材料、人工提交，不自动操作账号'},
 });
@@ -58,6 +63,8 @@ export function taskRoute(task, {provider, model} = {}) {
     complex: 'antigravity',
     chat: 'deepseek',
     image: 'aistudio',
+    video: 'hark',
+    motion: 'hark',
   };
   if (!Object.hasOwn(defaults, task)) throw new Error('未知任务类型');
   const antigravityModel = Object.values(ANTIGRAVITY_MODELS).includes(model);
@@ -69,6 +76,9 @@ export function taskRoute(task, {provider, model} = {}) {
   selected ||= defaults[task];
   if (task === 'image' && (selected !== 'aistudio' || (model && model !== IMAGE_MODEL))) {
     throw new Error('生图只使用 AI Studio Nano Banana 2.1');
+  }
+  if (['video', 'motion'].includes(task) && selected !== 'hark') {
+    throw new Error('代码视频和强动效的委派入口为 Hark');
   }
   if (selected === 'antigravity') {
     if (!Object.hasOwn(ANTIGRAVITY_TASK_MODELS, task)) throw new Error('这类任务未配置 Antigravity CLI');
@@ -91,9 +101,19 @@ export function taskRoute(task, {provider, model} = {}) {
         .map(candidate => ({...candidate, thinking: 'High'})),
     };
   }
-  browserEntry(selected);
+  const entry = browserEntry(selected);
   if (model && !((selected === 'aistudio' && studioTextModel) || (task === 'image' && selected === 'aistudio' && model === IMAGE_MODEL) || (selected === 'hark' && model === HARK_MODEL))) throw new Error('该任务没有此显式型号选项');
-  if (selected === 'hark') return {provider:selected,model:HARK_MODEL,modelSelection:'site_default',thinking:'site_default',search:'verify_tool_use_when_needed',newProjectPerConversation:true};
+  if (selected === 'hark') {
+    return {
+      provider: selected,
+      model: HARK_MODEL,
+      modelSelection: 'site_default',
+      thinking: 'site_default',
+      search: 'verify_tool_use_when_needed',
+      newProjectPerConversation: entry.newProjectPerConversation,
+      fallbackUrl: entry.fallbackUrl,
+    };
+  }
   if (selected === 'deepseek') return {provider:selected,thinking:true,search:true,model:'current_web_model'};
   if (selected === 'kimi') return {provider:selected,model:'K3',thinking:'极致',search:'verify_tool_use_when_needed'};
   if (selected === 'zhipu') return {provider:selected,model:'GLM-5.3',thinking:'极致',search:'verify_switch_when_needed'};

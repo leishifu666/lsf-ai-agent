@@ -111,15 +111,22 @@ test('Public browser routes expose only the supported provider set',()=>{
   assert.throws(()=>taskRoute('copywriting',{model:'unsupported-model'}),/型号/);
 });
 
-test('Unsupported media tasks fail instead of silently switching providers',()=>{
+test('Code-driven video and motion use Hark projects with the chat fallback',()=>{
+  assert.equal(browserEntry('hark').url,'https://hark.com/projects/new');
   for(const task of ['video','motion']){
-    assert.throws(()=>taskRoute(task),/未知任务/);
-    assert.throws(()=>taskRoute(task,{provider:'deepseek'}),/未知任务/);
+    const route = taskRoute(task);
+    assert.equal(route.provider,'hark');
+    assert.equal(route.model,HARK_MODEL);
+    assert.equal(route.modelSelection,'site_default');
+    assert.equal(route.thinking,'site_default');
+    assert.equal(route.newProjectPerConversation,true);
+    assert.equal(route.fallbackUrl,'https://hark.com/chat');
+    assert.throws(()=>taskRoute(task,{provider:'deepseek'}),/Hark/);
   }
 });
 
 test('Explicit Claude tasks use Hark without overriding existing task defaults',()=>{
-  for(const task of ['copywriting','design','frontend','code','complex','chat']){
+  for(const task of ['copywriting','copy_review','design','frontend','code','complex','chat']){
     assert.equal(taskRoute(task,{provider:'hark'}).model,HARK_MODEL);
     assert.equal(taskRoute(task,{model:HARK_MODEL}).provider,'hark');
     assert.equal(taskRoute(task,{provider:'hark',model:HARK_MODEL}).model,HARK_MODEL);
