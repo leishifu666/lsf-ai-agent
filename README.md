@@ -10,13 +10,17 @@
 
 ## 平时怎么分工
 
-- **文案和评审** 用 Antigravity CLI 的 Gemini 4 Hydrogen / High，额度用完切到 AI Studio Hydrogen / High。
-- **复杂编程** 先用 CLI 的 Neon / High。遇到额度用尽或型号不可用，依次尝试 CLI Argon、AI Studio Neon、AI Studio Argon、CLI Hydrogen，全程用 High。见 [Antigravity CLI 说明](references/antigravity.md)。
-- **前端审美** 用 AI Studio 的 Gemini 3.1 Pro / High，或者 Hark 的 Claude Opus 5.5。
-- **常规实现、前端编码和修复** 用 DeepSeek，打开深度思考和智能搜索。
-- **代码视频和强动效** 默认走 Hark 的 Claude Opus 5.5。新任务开新项目，改稿留在原项目，确认没提交成功时切普通聊天。点名 Claude 做设计、代码、文案或评审，也走这个入口。见 [Hark 说明](references/hark.md)。
-- **生图** 用 AI Studio 的 Nano Banana 2.1，支持 2K / 4K 和指定比例。
-- 也可以点名 Kimi K3 或智谱 GLM-5.3，两者都用极致档。
+| 任务 | 默认渠道 | 模型与设置 |
+|---|---|---|
+| 文案和评审 | Antigravity CLI | Gemini 4 Hydrogen / High，额度用完切 AI Studio Hydrogen / High |
+| 复杂编程方案 | Antigravity CLI | Gemini 4 Neon / High，[额度用尽时按顺序切换](references/antigravity.md#额度用尽时) |
+| 代码视频和强动效 | Hark | Claude Opus 5.5，[新项目优先，普通聊天兜底](references/hark.md) |
+| 前端审美与视觉设计 | AI Studio 或 Hark | Gemini 3.1 Pro / High 或 Claude Opus 5.5 |
+| 前端实现、常规编码和修复 | DeepSeek | 开启深度思考和智能搜索 |
+| 生图和图片编辑 | AI Studio | Nano Banana 2.1，支持 2K / 4K 和指定比例 |
+| 指定的设计、文案或综合任务 | Kimi 或智谱 | Kimi K3 或 GLM-5.3，均用极致档 |
+
+点名 Claude 做设计、代码、文案或评审，也走 Hark。同一任务改稿沿用原项目。
 
 ## 安装与使用
 
