@@ -3,9 +3,8 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const PRO = Object.freeze({entry: '对话', menu: '3.1 Pro 高级推理', label: 'Pro 高点', high: true});
-const FLASH = Object.freeze({entry: '对话', menu: '3.8 Flash 全方位帮助', label: 'Flash 高点', high: true});
 const ARGON = Object.freeze({entry: '任务', menu: '4 Argon 复杂任务', label: 'Gemini Argon', high: false});
-const ROUTES = Object.freeze({frontend: PRO, design: PRO, copywriting: PRO, chat: FLASH, complex: ARGON});
+const ROUTES = Object.freeze({frontend: PRO, design: PRO, copywriting: PRO, chat: PRO, complex: ARGON});
 export const VERIFIED_ON = '2026-10-20';
 
 export function isFreshAnswer(state, previousAnswerCount, previousAnswerId = null) {

@@ -1,5 +1,9 @@
 /** Public ego-browser Page operations; run each dropdown open/select/verify in one Node round. */
-import {browserEntry, IMAGE_MODEL, validateImageSettings, optionIndex, optionValues, modelIdFromLabel, freshStudioResult} from './browser_policy.mjs';
+import {AISTUDIO_MODELS, browserEntry, IMAGE_MODEL, validateImageSettings, optionIndex, optionValues, modelIdFromLabel, freshStudioResult} from './browser_policy.mjs';
+
+const quotaPattern = String.raw`RESOURCE_EXHAUSTED|(?:quota|rate limit|usage limit).{0,40}(?:exceeded|exhausted|reached)|(?:超出|已用尽|已达到).{0,15}(?:配额|额度|速率限制)|(?:配额|额度|速率限制).{0,15}(?:用尽|超限|已达)`;
+const errorPattern = `发生内部错误|An internal error|Something went wrong|${quotaPattern}`;
+const textModels = Object.values(AISTUDIO_MODELS);
 
 export function createAIStudioBrowser(page, {task = 'chat'} = {}) {
   browserEntry('aistudio');
@@ -8,7 +12,7 @@ export function createAIStudioBrowser(page, {task = 'chat'} = {}) {
   const editor = 'textarea[aria-label="Enter a prompt"]';
 
   async function inspect({readAnswer = false} = {}) {
-    return page.evaluate(({readAnswer}) => {
+    return page.evaluate(({readAnswer, errorPattern, quotaPattern}) => {
       const visible = e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
       const buttons = [...document.querySelectorAll('button')].filter(visible);
       const modelText = document.querySelector('button.model-selector-card')?.innerText || '';
@@ -22,14 +26,17 @@ export function createAIStudioBrowser(page, {task = 'chat'} = {}) {
       const footerPresent = !!last?.querySelector('.turn-footer');
       const generating = buttons.some(e => /^(?:progress_activity\s*)?(?:Stop|停止)$/.test((e.getAttribute('aria-label') || e.innerText).trim()));
       const runAvailable = buttons.some(e => /^Run\s+keyboard_return$/.test(e.innerText.trim()) && !e.disabled);
-      const error = !!last && /发生内部错误|An internal error|Something went wrong|RESOURCE_EXHAUSTED/i.test(last.innerText);
+      const errorText = last && !body?.innerText.trim() && new RegExp(errorPattern, 'i').test(last.innerText)
+        ? last.innerText.slice(0, 800) : null;
+      const error = errorText !== null;
       const images = [...(last?.querySelectorAll('img.loaded-image') || [])].map(e => ({width: e.naturalWidth, height: e.naturalHeight, loaded: e.complete}));
       return {modelText, settings, switches, responseCount: finals.length, responseId, footerPresent, generating, runAvailable, error, images,
         complete: !generating && runAvailable && footerPresent && !error && (!!body?.innerText.trim() || images.some(i => i.width >= 1000 && i.loaded)),
         draftPresent: !!document.querySelector('textarea[aria-label="Enter a prompt"]')?.value.trim(),
         apiKeySelected: !document.querySelector('button[aria-label="No API key selected"]'),
-        ...(readAnswer ? {answer: body?.innerText || '', errorText: error ? last.innerText.slice(0,800) : null} : {})};
-    }, {readAnswer});
+        ...(readAnswer ? {answer: body?.innerText || '', errorText,
+          errorKind: error && new RegExp(quotaPattern, 'i').test(errorText) ? 'quota' : error ? 'generation' : null} : {})};
+    }, {readAnswer, errorPattern, quotaPattern});
   }
 
   async function selectSetting(label, value) {
@@ -48,30 +55,48 @@ export function createAIStudioBrowser(page, {task = 'chat'} = {}) {
   return {
     inspect, selectSetting,
     async waitForResult({previousCount, previousId}, {timeout = 50000} = {}) {
-      await page.waitForFunction(({previousCount, previousId}) => {
+      await page.waitForFunction(({previousCount, previousId, errorPattern}) => {
         const finals = [...document.querySelectorAll('ms-chat-turn:not(.thought-activity-host) .chat-turn-container.model')];
         const last = finals.at(-1);
         const id = last?.closest('ms-chat-turn')?.id;
         const fresh = previousId && id ? id !== previousId : finals.length > previousCount;
         const buttons = [...document.querySelectorAll('button')].filter(e => e.getClientRects().length > 0);
         const stop = buttons.some(e => /^(?:progress_activity\s*)?(?:Stop|停止)$/.test((e.getAttribute('aria-label') || e.innerText).trim()));
-        const error = /发生内部错误|An internal error|Something went wrong|RESOURCE_EXHAUSTED/i.test(last?.innerText || '');
-        const content = last?.querySelector('ms-cmark-node.cmark-node')?.innerText.trim() || [...(last?.querySelectorAll('img.loaded-image') || [])].some(e => e.complete && e.naturalWidth >= 1000);
+        const text = last?.querySelector('ms-cmark-node.cmark-node')?.innerText.trim();
+        const error = !text && new RegExp(errorPattern, 'i').test(last?.innerText || '');
+        const content = text || [...(last?.querySelectorAll('img.loaded-image') || [])].some(e => e.complete && e.naturalWidth >= 1000);
         return fresh && !stop && (error || (content && !!last?.querySelector('.turn-footer')));
-      }, {previousCount, previousId}, {timeout});
+      }, {previousCount, previousId, errorPattern}, {timeout});
       const result = await inspect({readAnswer: true});
-      if (!freshStudioResult(result, previousCount, previousId)) throw new Error(result.error ? 'AI Studio 本轮生成返回错误' : '本轮最终回答未通过新鲜度和完成检查');
+      if (!freshStudioResult(result, previousCount, previousId)) {
+        const fresh = previousId && result.responseId ? result.responseId !== previousId : result.responseCount > previousCount;
+        if (fresh && result.error) {
+          const error = new Error('AI Studio 本轮生成返回错误');
+          error.code = result.errorKind === 'quota' ? 'AISTUDIO_QUOTA' : 'AISTUDIO_GENERATION';
+          error.details = result.errorText;
+          throw error;
+        }
+        throw new Error('本轮最终回答未通过新鲜度和完成检查');
+      }
       return result;
     },
     async selectModel(id) {
-      if (!/^[a-z0-9.-]+$/.test(id)) throw new Error('需要明确的模型 ID');
       if (task === 'image' && id !== IMAGE_MODEL) throw new Error('生图不允许切换到其他型号');
+      if (task !== 'image' && !textModels.includes(id)) throw new Error('请选择已配置的 AI Studio 文本模型');
+      selectedModel = null;
       await page.click('button.model-selector-card', {label: '打开 AI Studio 模型选择'});
       await page.fill('input[placeholder="Search for a model or agent"]', id);
       await page.click(`[id=${JSON.stringify('model-carousel-row-models/' + id)}]`, {label: '选择明确指定的 Gemini 模型'});
       const state = await inspect();
       if (modelIdFromLabel(state.modelText) !== id) throw new Error('模型标签与所选 ID 不符；停止并核对翻译或界面变化');
       selectedModel = id;
+      return state;
+    },
+    async configureText({model}) {
+      if (task === 'image') throw new Error('生图请使用 configureImage');
+      await this.selectModel(model);
+      const state = await selectSetting('Thinking Level', 'High');
+      if (modelIdFromLabel(state.modelText) !== model) throw new Error('设置 High 后模型发生变化，重新核对');
       return state;
     },
     async setSwitch(label, enabled) {
@@ -104,6 +129,7 @@ export function createAIStudioBrowser(page, {task = 'chat'} = {}) {
       const state = await inspect();
       if (!selectedModel || modelIdFromLabel(state.modelText) !== selectedModel) throw new Error('本轮尚未确认模型');
       if (task === 'image') validateImageSettings({model: selectedModel, resolution: state.settings.Resolution, aspectRatio: state.settings['Aspect ratio']});
+      else optionIndex([state.settings['Thinking Level'] || ''], 'High');
       const actual = await page.evaluate(() => document.querySelector('textarea[aria-label="Enter a prompt"]')?.value);
       if (!lastPrompt || actual !== lastPrompt || state.generating) throw new Error('提示全文不符或已有生成，未重复发送');
       const submittedAt = Date.now();

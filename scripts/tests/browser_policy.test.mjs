@@ -1,20 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {browserEntry,geminiModelForTask,taskRoute,validateDeepSeekSettings,IMAGE_MODEL,BROWSER_PROVIDERS,validateImageSettings,optionIndex,modelIdFromLabel,freshStudioResult,freshDeepSeekResult} from '../browser_policy.mjs';
+import {browserEntry,geminiModelForTask,taskRoute,validateDeepSeekSettings,IMAGE_MODEL,HARK_MODEL,validateImageSettings,BROWSER_PROVIDERS,optionIndex,modelIdFromLabel,freshStudioResult,freshDeepSeekResult} from '../browser_policy.mjs';
 import {createAIStudioBrowser} from '../aistudio_browser.mjs';
 
-test('Gemini defaults to AI Studio and disabled websites cannot be automated',()=>{
+test('The browser entry defaults to AI Studio and disabled websites cannot be automated',()=>{
   assert.match(browserEntry().url,/aistudio\.google\.com/);
   assert.throws(()=>browserEntry('gemini_web'),/禁用/);
   assert.throws(()=>browserEntry('midjourney'),/人工/);
   assert.throws(()=>browserEntry('unknown'));
   for(const provider of ['kimi','deepseek','zhipu'])assert.equal(browserEntry(provider).enabled,true);
 });
-test('Gemini task models retain the user choices',()=>{
-  for(const task of ['frontend','design','copywriting'])assert.equal(geminiModelForTask(task),'gemini-3.1-pro-preview');
-  assert.equal(geminiModelForTask('chat'),'gemini-3.8-flash');
-  assert.equal(geminiModelForTask('complex'),'gemini-4-argon');
+test('AI Studio uses its own catalog IDs',()=>{
+  for(const task of ['frontend','design'])assert.equal(geminiModelForTask(task),'gemini-3.1-pro-preview');
+  for(const task of ['copywriting','copy_review','chat'])assert.equal(geminiModelForTask(task),'gemini-4-hydrogen');
+  assert.equal(geminiModelForTask('complex'),'gemini-4-neon');
   assert.equal(geminiModelForTask('image'),IMAGE_MODEL);
 });
 test('Image policy rejects other models, 1K and unspecified ratios',()=>{
@@ -24,7 +24,10 @@ test('Image policy rejects other models, 1K and unspecified ratios',()=>{
   assert.throws(()=>validateImageSettings({...good,model:'gemini-3-pro-image'}),/2.1/);
   assert.throws(()=>validateImageSettings({...good,resolution:'1K'}),/2K/);
   assert.throws(()=>validateImageSettings({...good,aspectRatio:'Auto'}),/比例/);
+  assert.equal(taskRoute('image',{model:IMAGE_MODEL}).model,IMAGE_MODEL);
+  assert.throws(()=>taskRoute('image',{provider:'aistudio',model:'gemini-4-neon'}),/生图/);
 });
+
 test('Visible option matching handles observed translation without guessing an unavailable value',()=>{
   assert.equal(optionIndex(['低的','中等的','高的'],'High'),2);
   assert.equal(optionIndex(['1K','2K','4K'],'4K'),2);
@@ -35,6 +38,10 @@ test('Canonical image label does not accept similarly named image models',()=>{
   assert.equal(modelIdFromLabel('Nano Banana 2 Lite'),null);
   assert.equal(modelIdFromLabel('Nano Banana Pro'),null);
   assert.equal(modelIdFromLabel('Gemini 3.1 Pro 预览'),'gemini-3.1-pro-preview');
+  assert.equal(modelIdFromLabel('双子座4号氢\n双子-4-氢'),'gemini-4-hydrogen');
+  assert.equal(modelIdFromLabel('Gemini 4 Neon\ngemini-4-neon'),'gemini-4-neon');
+  assert.equal(modelIdFromLabel('Gemini 4 Argon\ngemini-4-argon'),'gemini-4-argon');
+  assert.equal(modelIdFromLabel('Gemini 4 Argon\ngemini-4-carbon'),null);
 });
 test('A streaming preview, stale body, or completed error cannot be delivered',()=>{
   const done={responseCount:2,complete:true,error:false,answer:'answer',images:[]};
@@ -63,10 +70,15 @@ test('User task routing separates visual design, implementation and copywriting'
   assert.equal(taskRoute('design').model,'gemini-3.1-pro-preview');
   assert.equal(taskRoute('frontend').provider,'deepseek');
   assert.equal(taskRoute('code').provider,'deepseek');
-  assert.equal(taskRoute('copywriting').provider,'aistudio');
-  assert.equal(taskRoute('copywriting').model,'gemini-3.1-pro-preview');
-  assert.equal(taskRoute('copywriting',{model:'gemini-3.8-flash'}).model,'gemini-3.8-flash');
-  assert.throws(()=>taskRoute('copywriting',{model:'gemini-4-argon'}),/型号/);
+  for (const task of ['copywriting','copy_review']) {
+    assert.deepEqual(taskRoute(task), {
+      provider: 'antigravity', model: 'gemini-4-hydrogen-high', thinking: 'High',
+      fallbacks: [{provider: 'aistudio', model: 'gemini-4-hydrogen', thinking: 'High'}],
+    });
+  }
+  assert.equal(taskRoute('copywriting',{provider:'aistudio'}).model,'gemini-4-hydrogen');
+  assert.equal(taskRoute('copywriting',{model:'gemini-3.1-pro-preview'}).provider,'aistudio');
+  assert.throws(()=>taskRoute('copywriting',{provider:'aistudio',model:'gemini-4-hydrogen-high'}),/型号/);
   assert.throws(()=>taskRoute('image',{provider:'kimi'}),/生图/);
   assert.throws(()=>taskRoute('unknown'),/未知任务/);
   assert.equal(taskRoute('design',{provider:'kimi'}).model,'K3');
@@ -75,9 +87,24 @@ test('User task routing separates visual design, implementation and copywriting'
   assert.equal(taskRoute('copywriting',{provider:'zhipu'}).search,'verify_switch_when_needed');
 });
 
+test('Complex programming checks both CLI allowances before using AI Studio and the final CLI fallback',()=>{
+  const route = taskRoute('complex');
+  assert.equal(route.model, 'gemini-4-neon-high');
+  assert.equal(route.thinking, 'High');
+  assert.deepEqual(route.fallbacks, [
+    {provider:'antigravity', model:'gemini-4-argon-high', thinking:'High'},
+    {provider:'aistudio', model:'gemini-4-neon', thinking:'High'},
+    {provider:'aistudio', model:'gemini-4-argon', thinking:'High'},
+    {provider:'antigravity', model:'gemini-4-hydrogen-high', thinking:'High'},
+  ]);
+  assert.deepEqual(taskRoute('complex',{model:'gemini-4-argon-high'}).fallbacks, route.fallbacks.slice(1));
+  assert.deepEqual(taskRoute('code',{provider:'antigravity'}), route);
+  assert.throws(()=>taskRoute('complex',{provider:'antigravity',model:'gemini-4-neon-xhigh'}),/High/);
+});
+
 test('Public browser routes expose only the supported provider set',()=>{
   assert.deepEqual(Object.keys(BROWSER_PROVIDERS).filter(key=>BROWSER_PROVIDERS[key].enabled).sort(),
-    ['aistudio','deepseek','kimi','zhipu']);
+    ['aistudio','deepseek','hark','kimi','zhipu']);
   assert.deepEqual(Object.keys(BROWSER_PROVIDERS).filter(key=>!BROWSER_PROVIDERS[key].enabled).sort(),
     ['gemini_web','midjourney']);
   assert.throws(()=>taskRoute('code',{provider:'unsupported-provider'}),/未知外部模型入口/);
@@ -89,6 +116,23 @@ test('Unsupported media tasks fail instead of silently switching providers',()=>
     assert.throws(()=>taskRoute(task),/未知任务/);
     assert.throws(()=>taskRoute(task,{provider:'deepseek'}),/未知任务/);
   }
+});
+
+test('Explicit Claude tasks use Hark without overriding existing task defaults',()=>{
+  for(const task of ['copywriting','design','frontend','code','complex','chat']){
+    assert.equal(taskRoute(task,{provider:'hark'}).model,HARK_MODEL);
+    assert.equal(taskRoute(task,{model:HARK_MODEL}).provider,'hark');
+    assert.equal(taskRoute(task,{provider:'hark',model:HARK_MODEL}).model,HARK_MODEL);
+  }
+  assert.equal(taskRoute('design').provider,'aistudio');
+  assert.equal(taskRoute('copywriting').provider,'antigravity');
+  assert.equal(taskRoute('frontend').provider,'deepseek');
+  assert.equal(taskRoute('code').provider,'deepseek');
+  assert.throws(()=>taskRoute('copywriting',{provider:'deepseek',model:HARK_MODEL}),/型号/);
+  assert.throws(()=>taskRoute('code',{provider:'hark',model:'Claude Opus 4.6'}),/型号/);
+  assert.throws(()=>taskRoute('image',{provider:'hark'}),/生图/);
+  assert.throws(()=>taskRoute('image',{model:HARK_MODEL}),/生图/);
+  assert.throws(()=>taskRoute('unknown',{provider:'hark'}),/未知任务/);
 });
 
 test('AI Studio waits for setting and switch readback instead of rejecting a transient label',async()=>{
@@ -121,8 +165,9 @@ test('DeepSeek routes require both switches before submission',()=>{
 test('AI Studio does not call a returning Run button with an unfinished body complete',async()=>{
   let footer=false;
   let answer='';
+  let notice='';
   const last={
-    innerText:'',
+    get innerText(){ return notice || answer; },
     querySelector(selector){return selector==='.turn-footer'?(footer?{}:null):{innerText:answer};},
     querySelectorAll(){return [];},
     closest(){return {id:'turn-new'};},
@@ -136,11 +181,21 @@ test('AI Studio does not call a returning Run button with an unfinished body com
       return [];
     },
   };
-  const page={async evaluate(fn,args){return vm.runInNewContext(`(${fn.toString()})(args)`,{document,args,getComputedStyle(){return {visibility:'visible'};}});}};
+  const page={
+    async evaluate(fn,args){return vm.runInNewContext(`(${fn.toString()})(args)`,{document,args,getComputedStyle(){return {visibility:'visible'};}});},
+    async waitForFunction(fn,args){assert.equal(await this.evaluate(fn,args),true);},
+  };
   const studio=createAIStudioBrowser(page);
   assert.equal((await studio.inspect()).complete,false);
   answer='ready';
   assert.equal((await studio.inspect()).complete,false);
   footer=true;
   assert.equal((await studio.inspect()).complete,true);
+  answer='The API may return RESOURCE_EXHAUSTED.';
+  assert.equal((await studio.inspect()).complete,true);
+  answer='';
+  notice='Rate limit exceeded for this model';
+  await assert.rejects(studio.waitForResult({previousCount:0}), {code:'AISTUDIO_QUOTA'});
+  notice='An internal error occurred';
+  await assert.rejects(studio.waitForResult({previousCount:0}), {code:'AISTUDIO_GENERATION'});
 });

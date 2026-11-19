@@ -1,4 +1,4 @@
 interface:
   display_name: "LSF-AI 调度"
-  short_description: "调度 Gemini、DeepSeek、Kimi 与智谱，支持浏览器、人工中转和可选 API"
-  default_prompt: "使用 $lsf-ai-agent，沿用已选产品与模式。设计和文案优先 AI Studio Gemini 3.1 Pro / High，文案可明确选择 3.8 Flash / High；前端实现和编码优先 DeepSeek，深度思考与智能搜索同时开启。Kimi 使用 K3 / 极致，智谱使用 GLM-5.3 / 极致并核对联网。图片仅 AI Studio Nano Banana 2.1 的 2K/4K，明确比例；普通 Gemini 网页禁用。仅明确选择 API 时使用贞贞接口。回收完整结果并在原项目验证，附件集中且默认不压缩；仅修改技能不发送模型任务。"
+  short_description: "通过 Antigravity CLI、AI Studio 等委派外部模型"
+  default_prompt: "使用 $lsf-ai-agent，沿用明确指定的产品。文案和文案评审用 Antigravity CLI 的 Gemini 4 Hydrogen，额度用尽切 AI Studio Hydrogen。复杂编程按 CLI Neon、CLI Argon、AI Studio Neon、AI Studio Argon、CLI Hydrogen 顺序切换。CLI 和 AI Studio 的 Gemini 文本模型统一用 High。前端审美用 AI Studio Gemini 3.1 Pro 或 Hark Claude Opus 5.5；常规代码实现优先 DeepSeek，同时开启深度思考和智能搜索。Kimi 用 K3 / 极致，智谱用 GLM-5.3 / 极致。生图用 AI Studio Nano Banana 2.1 的 2K/4K，明确比例。仅明确选择 API 时使用贞贞接口。回收完整结果并在原项目验证。仅修改技能时不发送模型任务。"

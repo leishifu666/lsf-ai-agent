@@ -1,11 +1,32 @@
-/** User-selected browser routes and image constraints. No browser or network side effects. */
+/** User-selected task routes and image constraints. No browser or network side effects. */
 export const BROWSER_PROVIDERS = Object.freeze({
   aistudio: {url: 'https://aistudio.google.com/prompts/new_chat', enabled: true},
   kimi: {url: 'https://www.kimi.com/', enabled: true},
   deepseek: {url: 'https://chat.deepseek.com/', enabled: true},
   zhipu: {url: 'https://chatglm.cn/', enabled: true},
-  gemini_web: {url: 'https://gemini.google.com/app', enabled: false, reason: '用户已暂时禁用 Gemini 普通网页版；优先 AI Studio'},
+  hark: {url: 'https://hark.com/projects/new', enabled: true, newProjectPerConversation: true},
+  gemini_web: {url: 'https://gemini.google.com/app', enabled: false, reason: '用户已暂时禁用 Gemini 普通网页版；按任务使用 Antigravity CLI 或 AI Studio'},
   midjourney: {url: 'https://www.midjourney.com/', enabled: false, reason: '按用户避免封号的选择，仅准备材料、人工提交，不自动操作账号'},
+});
+// User-confirmed Hark default; no model selection or identity check required.
+export const HARK_MODEL = 'Claude Opus 5.5';
+export const ANTIGRAVITY_MODELS = Object.freeze({
+  neon: 'gemini-4-neon-high',
+  hydrogen: 'gemini-4-hydrogen-high',
+  argon: 'gemini-4-argon-high',
+});
+const ANTIGRAVITY_TASK_MODELS = Object.freeze({
+  code: ANTIGRAVITY_MODELS.neon,
+  complex: ANTIGRAVITY_MODELS.neon,
+  copywriting: ANTIGRAVITY_MODELS.hydrogen,
+  copy_review: ANTIGRAVITY_MODELS.hydrogen,
+  chat: ANTIGRAVITY_MODELS.hydrogen,
+});
+export const AISTUDIO_MODELS = Object.freeze({
+  pro: 'gemini-3.1-pro-preview',
+  hydrogen: 'gemini-4-hydrogen',
+  neon: 'gemini-4-neon',
+  argon: 'gemini-4-argon',
 });
 export const IMAGE_MODEL = 'gemini-nano-banana-2.1';
 export const IMAGE_SIZES = Object.freeze(['2K', '4K']);
@@ -18,25 +39,65 @@ export function browserEntry(provider = 'aistudio') {
   return {...entry, provider};
 }
 
+// AI Studio catalog IDs; the CLI uses its own High model IDs.
 export function geminiModelForTask(task) {
-  if (['frontend', 'design', 'copywriting'].includes(task)) return 'gemini-3.1-pro-preview';
-  if (task === 'chat') return 'gemini-3.8-flash';
-  if (task === 'complex') return 'gemini-4-argon';
+  if (['frontend', 'design'].includes(task)) return AISTUDIO_MODELS.pro;
+  if (['chat', 'copywriting', 'copy_review'].includes(task)) return AISTUDIO_MODELS.hydrogen;
+  if (['code', 'complex'].includes(task)) return AISTUDIO_MODELS.neon;
   if (task === 'image') return IMAGE_MODEL;
   throw new Error('未知 Gemini 任务类型');
 }
 
 export function taskRoute(task, {provider, model} = {}) {
-  const defaults = {design:'aistudio',frontend:'deepseek',copywriting:'aistudio',code:'deepseek',complex:'deepseek',chat:'deepseek',image:'aistudio'};
+  const defaults = {
+    design: 'aistudio',
+    frontend: 'deepseek',
+    copywriting: 'antigravity',
+    copy_review: 'antigravity',
+    code: 'deepseek',
+    complex: 'antigravity',
+    chat: 'deepseek',
+    image: 'aistudio',
+  };
   if (!Object.hasOwn(defaults, task)) throw new Error('未知任务类型');
-  const selected = provider || defaults[task];
-  if (task === 'image' && selected !== 'aistudio') throw new Error('生图只使用 AI Studio Nano Banana 2.1');
+  const antigravityModel = Object.values(ANTIGRAVITY_MODELS).includes(model);
+  const studioTextModel = Object.values(AISTUDIO_MODELS).includes(model);
+  let selected = provider;
+  if (!selected && model === HARK_MODEL) selected = 'hark';
+  if (!selected && antigravityModel) selected = 'antigravity';
+  if (!selected && studioTextModel) selected = 'aistudio';
+  selected ||= defaults[task];
+  if (task === 'image' && (selected !== 'aistudio' || (model && model !== IMAGE_MODEL))) {
+    throw new Error('生图只使用 AI Studio Nano Banana 2.1');
+  }
+  if (selected === 'antigravity') {
+    if (!Object.hasOwn(ANTIGRAVITY_TASK_MODELS, task)) throw new Error('这类任务未配置 Antigravity CLI');
+    if (model && !antigravityModel) throw new Error('Antigravity CLI 只使用已配置的 High 型号');
+    const primary = model || ANTIGRAVITY_TASK_MODELS[task];
+    const fallbacks = ['code', 'complex'].includes(task)
+      ? [
+          {provider: 'antigravity', model: ANTIGRAVITY_MODELS.argon},
+          {provider: 'aistudio', model: AISTUDIO_MODELS.neon},
+          {provider: 'aistudio', model: AISTUDIO_MODELS.argon},
+          {provider: 'antigravity', model: ANTIGRAVITY_MODELS.hydrogen},
+        ]
+      : [{provider: 'aistudio', model: AISTUDIO_MODELS.hydrogen}];
+    return {
+      provider: selected,
+      model: primary,
+      thinking: 'High',
+      fallbacks: fallbacks
+        .filter(candidate => candidate.model !== primary)
+        .map(candidate => ({...candidate, thinking: 'High'})),
+    };
+  }
   browserEntry(selected);
-  if (model && !(selected === 'aistudio' && task === 'copywriting' && ['gemini-3.1-pro-preview','gemini-3.8-flash'].includes(model))) throw new Error('该任务没有此显式型号选项');
+  if (model && !((selected === 'aistudio' && studioTextModel) || (task === 'image' && selected === 'aistudio' && model === IMAGE_MODEL) || (selected === 'hark' && model === HARK_MODEL))) throw new Error('该任务没有此显式型号选项');
+  if (selected === 'hark') return {provider:selected,model:HARK_MODEL,modelSelection:'site_default',thinking:'site_default',search:'verify_tool_use_when_needed',newProjectPerConversation:true};
   if (selected === 'deepseek') return {provider:selected,thinking:true,search:true,model:'current_web_model'};
   if (selected === 'kimi') return {provider:selected,model:'K3',thinking:'极致',search:'verify_tool_use_when_needed'};
   if (selected === 'zhipu') return {provider:selected,model:'GLM-5.3',thinking:'极致',search:'verify_switch_when_needed'};
-  if (selected === 'aistudio') return {provider:selected,model:model || geminiModelForTask(task === 'code' ? 'complex' : task),thinking:'High'};
+  if (selected === 'aistudio') return {provider:selected,model:model || geminiModelForTask(task),thinking:'High'};
   throw new Error('该入口没有已验证的任务路由');
 }
 
@@ -65,9 +126,18 @@ export function optionIndex(options, requested) {
 }
 
 export function modelIdFromLabel(label = '') {
-  const first = label.split('\n')[0].trim();
-  const normalized = first.replace(/双子座/g, 'Gemini').replace(/闪光灯/g, 'Flash').replace(/预览/g, 'Preview').replace(/\s+/g, '').toLowerCase();
-  return ({'nanobanana2.1': IMAGE_MODEL, 'gemini3.1propreview': 'gemini-3.1-pro-preview', 'gemini3.8flash': 'gemini-3.8-flash', 'gemini4argon': 'gemini-4-argon'})[normalized] || null;
+  const lines = label.split('\n').map(line => line.trim()).filter(Boolean);
+  const shownId = lines.find(line => /^gemini-[\w.-]+$/.test(line));
+  if (shownId) return [...Object.values(AISTUDIO_MODELS), IMAGE_MODEL].includes(shownId) ? shownId : null;
+  const normalized = (lines[0] || '').replace(/双子座/g, 'Gemini').replace(/预览/g, 'Preview').replace(/\s+/g, '').toLowerCase();
+  return ({
+    'nanobanana2.1': IMAGE_MODEL,
+    'gemini3.1propreview': AISTUDIO_MODELS.pro,
+    'gemini4neon': AISTUDIO_MODELS.neon,
+    'gemini4argon': AISTUDIO_MODELS.argon,
+    'gemini4hydrogen': AISTUDIO_MODELS.hydrogen,
+    'gemini4号氢': AISTUDIO_MODELS.hydrogen,
+  })[normalized] || null;
 }
 
 function hasNewIdentity(state, previousCount, previousId) {

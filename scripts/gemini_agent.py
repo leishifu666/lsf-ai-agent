@@ -24,14 +24,13 @@ ROUTES = {
     "frontend": "gemini-3.1-pro-preview-thinking-high",
     "design": "gemini-3.1-pro-preview-thinking-high",
     "copywriting": "gemini-3.1-pro-preview-thinking-high",
-    "chat": "gemini-3.8-flash-thinking-high",
+    "chat": "gemini-3.1-pro-preview-thinking-high",
     "complex": "gemini-4-argon",
 }
 # The provider strips its documented thinking alias in successful response.model.
 # Accept only that exact family, never an adjacent version or a different model.
 REPORTED_MODELS = {
     "gemini-3.1-pro-preview-thinking-high": {"gemini-3.1-pro-preview-thinking-high", "gemini-3.1-pro-preview"},
-    "gemini-3.8-flash-thinking-high": {"gemini-3.8-flash-thinking-high", "gemini-3.8-flash"},
     "gemini-4-argon": {"gemini-4-argon"},
 }
 EFFORT = "high"

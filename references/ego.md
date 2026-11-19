@@ -21,9 +21,8 @@ const page = space.page('p1');
 const {createAIStudioBrowser} = await import(pathToFileURL(
   `${skillRoot}/scripts/aistudio_browser.mjs`
 ).href);
-const studio = createAIStudioBrowser(page, {task: 'copywriting'});
-await studio.selectModel('gemini-3.1-pro-preview');
-await studio.selectSetting('Thinking Level', 'High');
+const studio = createAIStudioBrowser(page, {task: 'copy_review'});
+await studio.configureText({model: 'gemini-4-hydrogen'});
 ```
 
 使用其他宿主浏览器时读取其自己的工具文档，不套用 Ego 的 TaskSpace、Page 或 CLI。这里的页面辅助模块只适用于其所需 Page 接口，不保证兼容其他浏览器工具。

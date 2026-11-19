@@ -4,19 +4,20 @@
   <img src="./assets/lsf-ai-agent-cover.webp" alt="LSF-AI调度 Skill：视觉设计、文案写作、前端开发、根因分析、图像生成与结果验证" width="540">
 </p>
 
-把任务交给适合的外部模型，收回结果，再回到原项目完成应用和验证。适用于能够加载 `SKILL.md` 的 AI 编程助手；仓库提供任务规则、浏览器页面辅助和可选的 Gemini API 客户端。
+把任务交给适合的外部模型，收回结果，再回到原项目完成应用和验证。适用于能够加载 `SKILL.md` 的 AI 编程助手。仓库提供 Antigravity CLI 委派规则、浏览器页面辅助和可选 Gemini API 客户端。
 
 ## 支持范围
 
 | 任务 | 默认渠道 | 配置 |
 |---|---|---|
-| 视觉设计、文案 | Google AI Studio | Gemini 3.1 Pro / High |
-| 前端、编码、复杂工程 | DeepSeek 网页 | 深度思考＋智能搜索 |
-| 明确选择的快速文案、问答 | Google AI Studio | Gemini 3.8 Flash / High |
+| 日常文案与文案评审 | Antigravity CLI | Gemini 4 Hydrogen / High，额度用尽切 AI Studio Hydrogen / High |
+| 复杂编程方案、架构与技术选型 | Antigravity CLI | Gemini 4 Neon / High，[按额度切换](references/antigravity.md#额度用尽时) |
+| 前端审美与视觉设计 | Google AI Studio / Hark | Gemini 3.1 Pro / High 或 Claude Opus 5.5 |
+| 前端实现、常规编码与修复 | DeepSeek 网页 | 深度思考＋智能搜索 |
 | 可选的设计、文案、综合任务 | Kimi / 智谱清言 | K3 / 极致；GLM-5.3 / 极致 |
 | 图片生成与编辑 | Google AI Studio | Nano Banana 2.1，2K / 4K，明确比例 |
 
-支持三种工作方式：**浏览器操作、用户复制粘贴中转、明确选择的贞贞 API**。沿用当前已选方式，不因故障静默换模型或渠道。Midjourney 只提供人工交接材料；普通 Gemini 网页在此配置中禁用。视频、动效没有独立默认渠道。
+支持四种工作方式，分别为 Antigravity CLI、浏览器操作、用户复制粘贴中转和明确选择的贞贞 API。型号额度耗尽时按任务的兜底顺序切换。Midjourney 只提供人工交接材料。
 
 这些型号和设置是技能预设，使用时必须核对实际可用项；模型自述、发送成功、思考状态和预览图都不算已完成的交付。页面选择器来自既有适配，网站改版后可能需要更新。
 
@@ -31,7 +32,7 @@ git clone https://github.com/leishifu666/lsf-ai-agent.git "$HOME/.agents/skills/
 Codex 也可将目标目录改成 `$HOME/.codex/skills/lsf-ai-agent`。若目录中已有本地定制版本，先另选目录比较，不覆盖原安装。按宿主要求刷新技能或开始新对话，然后调用：
 
 ```text
-使用 $lsf-ai-agent，让 DeepSeek 检查当前项目的根因修复方案。
+使用 $lsf-ai-agent，让 Gemini 4 Neon 给出当前项目的重构方案。
 使用 $lsf-ai-agent，这次我复制粘贴中转，请给我一份完整的 Gemini 交接提示。
 使用 $lsf-ai-agent，在 AI Studio 生成 16:9、2K 的图片。
 ```
@@ -39,6 +40,7 @@ Codex 也可将目标目录改成 `$HOME/.codex/skills/lsf-ai-agent`。若目录
 ## 依赖与配置
 
 - **阅读规则、用户中转**：支持加载技能的 AI 助手即可。
+- **Antigravity CLI**：安装并登录 `agy`，用 `agy models` 核对当前账号可用档位。见 [CLI 使用说明](references/antigravity.md)。
 - **浏览器模式**：另行安装 Ego Lite 与对应 `ego-browser` 技能，或使用宿主明确支持的浏览器工具。页面辅助模块需要外部传入兼容的 Page，不负责启动浏览器；宿主未提供相关工具时使用中转。
 - **JavaScript 模块与离线测试**：Node.js 18+，使用内置模块，无 npm 依赖。
 - **可选 API 客户端**：Python 3.10+，仅标准库；端点固定为 `https://ai.t8star.org/v1`。需使用者自己的账号、密钥与额度，只有明确选择 API 后才使用。

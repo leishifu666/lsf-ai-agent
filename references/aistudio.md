@@ -8,14 +8,14 @@
 
 | 用途 | 配置的目录 ID | 思考 |
 |---|---|---|
-| 设计、文案 | `gemini-3.1-pro-preview` | High |
-| 明确选择的快速文案、普通问答 | `gemini-3.8-flash` | High |
+| 前端审美、视觉方向与设计审查 | `gemini-3.1-pro-preview` | High |
+| CLI Hydrogen 额度用尽后的文案与文案评审 | `gemini-4-hydrogen` | High |
+| CLI Neon 与 Argon 额度用尽后的复杂编程方案 | 依次 `gemini-4-neon`、`gemini-4-argon` | High |
 | 图片 | `gemini-nano-banana-2.1` | High |
-| 明确选择 Gemini 的复杂任务 | `gemini-4-argon` | 按实际界面核对；不替代默认 DeepSeek 工程路由 |
 
 目录项示例：`[id="model-carousel-row-models/gemini-3.1-pro-preview"]`。没有指定目录项时不选择近似名字或自动降级。
 
-展开 `role=combobox`、名称 `Thinking Level`，读取可见 `mat-option`，选择 High 并等待回读。辅助脚本支持已记录的“高/高的”等翻译标签，不据此猜测未知选项。
+文本任务调用 `createAIStudioBrowser(page, {task}).configureText({model})`，选择精确目录项和 High，再回读两项。辅助脚本识别已核对的“高/高的”以及 Hydrogen 的“双子座4号氢”标签，并在提交前再次检查。型号只接受额外付费时按当前不可用处理。
 
 ## 工具
 
@@ -38,6 +38,7 @@
 - 最终内容：`ms-chat-turn:not(.thought-activity-host) .chat-turn-container.model`，正文 `ms-cmark-node.cmark-node`。排除思考活动容器。
 - 提交前记录回答数量与 turn ID；虚拟列表数量可能不增长，优先比较新回答身份。新正文/最终图片、`.turn-footer`、Stop 消失和 Run 可用共同确认完成。错误容器和提前恢复的 Run 不算成功。
 - `send()` 返回本轮提交身份，`waitForResult(submission)` 检查新回答与完成状态。
+- 本轮额度错误返回 `AISTUDIO_QUOTA`。同时核对页面状态，再按 [任务兜底顺序](antigravity.md#额度用尽时)处理。
 - 图片读取本轮最终 `img.loaded-image`，检查 `naturalWidth/naturalHeight/complete`，排除小图标与预览。
 - 优先使用图片上的 Download 或 View full image。点击下载不等于文件已保存。
 - 若当前浏览器文档允许，可保存最终图片 DOM 已展示的 `currentSrc` 资源；不得拼内部接口或提取凭据。Ego 的 `page.fetch(observedSrc,{saveAs: absolutePath})` 仅在其当前指南明确支持时使用。

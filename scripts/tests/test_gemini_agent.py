@@ -75,7 +75,7 @@ class AgentTests(unittest.TestCase):
 
     def test_all_routes_pin_user_models_and_high_effort(self):
         expected = {"frontend": "gemini-3.1-pro-preview-thinking-high", "design": "gemini-3.1-pro-preview-thinking-high",
-                    "copywriting": "gemini-3.1-pro-preview-thinking-high", "chat": "gemini-3.8-flash-thinking-high",
+                    "copywriting": "gemini-3.1-pro-preview-thinking-high", "chat": "gemini-3.1-pro-preview-thinking-high",
                     "complex": "gemini-4-argon"}
         for task, model in expected.items():
             with self.subTest(task=task):
@@ -89,7 +89,7 @@ class AgentTests(unittest.TestCase):
                 self.assertEqual(result["model_verification"], "provider_reported")
 
     def test_only_exact_base_family_alias_accepted(self):
-        for model in (None, [], {}, "gemini-3-pro-preview", "gemini-3.8-flash", "claude-sonnet", "gemini-3.1-pro-preview-low"):
+        for model in (None, [], {}, "gemini-3-pro-preview", "gemini-4-hydrogen", "claude-sonnet", "gemini-3.1-pro-preview-low"):
             with self.subTest(model=model):
                 client = FakeClient([response(model)])
                 session = agent.ApiSession(client, "frontend", self.root)

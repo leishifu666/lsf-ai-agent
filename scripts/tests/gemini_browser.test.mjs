@@ -10,7 +10,7 @@ test('UI routes keep Pro in dialogue and Argon only in task', () => {
     assert.equal(browserRoute(task).entry, '对话');
     assert.equal(browserRoute(task).label, 'Pro 高点');
   }
-  assert.equal(browserRoute('chat').label, 'Flash 高点');
+  assert.equal(browserRoute('chat').label, 'Pro 高点');
   assert.equal(browserRoute('complex').entry, '任务');
   assert.equal(browserRoute('complex').high, false);
   assert.throws(() => browserRoute('anything'));
