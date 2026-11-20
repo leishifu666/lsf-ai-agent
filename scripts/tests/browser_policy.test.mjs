@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {browserEntry,geminiModelForTask,taskRoute,validateDeepSeekSettings,IMAGE_MODEL,HARK_MODEL,validateImageSettings,BROWSER_PROVIDERS,optionIndex,modelIdFromLabel,freshStudioResult,freshDeepSeekResult} from '../browser_policy.mjs';
+import {browserEntry,geminiModelForTask,taskRoute,validateDeepSeekSettings,IMAGE_MODEL,HARK_MODEL,validateImageSettings,validateFlowImageSettings,FLOW_IMAGE_RATIOS,BROWSER_PROVIDERS,optionIndex,modelIdFromLabel,freshStudioResult,freshDeepSeekResult} from '../browser_policy.mjs';
 import {createAIStudioBrowser} from '../aistudio_browser.mjs';
 
 test('The browser entry defaults to AI Studio and disabled websites cannot be automated',()=>{
@@ -26,6 +26,38 @@ test('Image policy rejects other models, 1K and unspecified ratios',()=>{
   assert.throws(()=>validateImageSettings({...good,aspectRatio:'Auto'}),/比例/);
   assert.equal(taskRoute('image',{model:IMAGE_MODEL}).model,IMAGE_MODEL);
   assert.throws(()=>taskRoute('image',{provider:'aistudio',model:'gemini-4-neon'}),/生图/);
+});
+
+test('Flow is an explicit image channel and preserves existing defaults',()=>{
+  assert.equal(browserEntry('flow').url,'https://flow.google.com/');
+  const route=taskRoute('image',{provider:'flow',model:IMAGE_MODEL});
+  assert.equal(route.model,IMAGE_MODEL);
+  assert.equal(route.modelLabel,'Nano Banana 2.1');
+  assert.equal(route.count,2);
+  assert.deepEqual(route.aspectRatios,['16:9','4:3','1:1','3:4','9:16']);
+  assert.equal(Object.hasOwn(route,'thinking'),false);
+  assert.equal(taskRoute('image').provider,'aistudio');
+  assert.equal(taskRoute('design').provider,'aistudio');
+  assert.throws(()=>taskRoute('code',{provider:'flow'}),/图片任务/);
+  assert.throws(()=>taskRoute('image',{provider:'flow',model:'Nano Banana Pro'}),/型号/);
+});
+
+test('Flow enforces the five observed ratios and user-selected batch limits',()=>{
+  for(const aspectRatio of FLOW_IMAGE_RATIOS){
+    for(const count of [2,3,4]){
+      const settings={model:IMAGE_MODEL,aspectRatio,count};
+      assert.deepEqual(validateFlowImageSettings(settings),settings);
+    }
+  }
+  const good={model:IMAGE_MODEL,aspectRatio:'3:4'};
+  assert.equal(validateFlowImageSettings(good).count,2);
+  for(const count of [0,1,5,2.5,'2',null])assert.throws(()=>validateFlowImageSettings({...good,count}),/每批/);
+  for(const aspectRatio of ['Auto','2:3','4:5','21:9',undefined])assert.throws(()=>validateFlowImageSettings({...good,aspectRatio}),/五种比例/);
+  for(const model of ['Nano Banana Pro','Nano Banana 2 Lite',undefined])assert.throws(()=>validateFlowImageSettings({...good,model}),/2\.1/);
+  assert.throws(()=>validateFlowImageSettings({...good,resolution:'2K'}),/高清重塑/);
+  assert.throws(()=>validateFlowImageSettings({...good,thinking:'High'}),/控件/);
+  // A ratio unavailable in Flow must remain valid in the existing AI Studio channel.
+  assert.equal(validateImageSettings({...good,resolution:'4K',aspectRatio:'2:3'}).aspectRatio,'2:3');
 });
 
 test('Visible option matching handles observed translation without guessing an unavailable value',()=>{
@@ -137,7 +169,7 @@ test('Complex programming checks both CLI allowances before using AI Studio and 
 
 test('Public browser routes expose only the supported provider set',()=>{
   assert.deepEqual(Object.keys(BROWSER_PROVIDERS).filter(key=>BROWSER_PROVIDERS[key].enabled).sort(),
-    ['aistudio','deepseek','hark','kimi','zhipu']);
+    ['aistudio','deepseek','flow','hark','kimi','zhipu']);
   assert.deepEqual(Object.keys(BROWSER_PROVIDERS).filter(key=>!BROWSER_PROVIDERS[key].enabled).sort(),
     ['gemini_web','midjourney']);
   assert.throws(()=>taskRoute('code',{provider:'unsupported-provider'}),/未知外部模型入口/);

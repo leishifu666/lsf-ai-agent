@@ -1,6 +1,7 @@
 /** User-selected task routes and image constraints. No browser or network side effects. */
 export const BROWSER_PROVIDERS = Object.freeze({
   aistudio: {url: 'https://aistudio.google.com/prompts/new_chat', enabled: true},
+  flow: {url: 'https://flow.google.com/', enabled: true},
   kimi: {url: 'https://www.kimi.com/', enabled: true},
   deepseek: {url: 'https://chat.deepseek.com/', enabled: true},
   zhipu: {url: 'https://chatglm.cn/', enabled: true},
@@ -53,6 +54,10 @@ export const AISTUDIO_MODELS = Object.freeze({
 export const IMAGE_MODEL = 'gemini-nano-banana-2.1';
 export const IMAGE_SIZES = Object.freeze(['2K', '4K']);
 export const IMAGE_RATIOS = Object.freeze(['1:1', '9:16', '16:9', '3:4', '4:3', '3:2', '2:3', '5:4', '4:5', '21:9', '4:1', '1:4', '8:1', '1:8']);
+// Flow exposes a display label, not AI Studio's model-ID selector.
+export const FLOW_IMAGE_MODEL_LABEL = 'Nano Banana 2.1';
+export const FLOW_IMAGE_RATIOS = Object.freeze(['16:9', '4:3', '1:1', '3:4', '9:16']);
+export const FLOW_IMAGE_COUNTS = Object.freeze([2, 3, 4]);
 
 export function browserEntry(provider = 'aistudio') {
   const entry = BROWSER_PROVIDERS[provider];
@@ -96,8 +101,11 @@ export function taskRoute(task, {provider, model} = {}) {
   if (!selected && studioTextModel) selected = 'aistudio';
   if (!selected && codexModel) selected = 'codex';
   selected ||= defaults[task];
-  if (task === 'image' && (selected !== 'aistudio' || (model && model !== IMAGE_MODEL))) {
-    throw new Error('生图只使用 AI Studio Nano Banana 2.1');
+  if (task === 'image' && !['aistudio', 'flow'].includes(selected)) {
+    throw new Error('生图只使用 AI Studio 或 Flow 的 Nano Banana 2.1');
+  }
+  if (task === 'image' && model && model !== IMAGE_MODEL) {
+    throw new Error('生图任务没有此型号选项：仅支持 Nano Banana 2.1');
   }
   if (['video', 'motion'].includes(task) && selected !== 'hark') {
     throw new Error('代码视频和强动效的委派入口为 Hark');
@@ -136,8 +144,10 @@ export function taskRoute(task, {provider, model} = {}) {
         .map(candidate => ({...candidate, thinking: 'High'})),
     };
   }
+  if (selected === 'flow' && task !== 'image') throw new Error('Flow 渠道仅用于图片任务');
   const entry = browserEntry(selected);
-  if (model && !((selected === 'aistudio' && studioTextModel) || (task === 'image' && selected === 'aistudio' && model === IMAGE_MODEL) || (selected === 'hark' && model === HARK_MODEL))) throw new Error('该任务没有此显式型号选项');
+  if (model && !((selected === 'aistudio' && studioTextModel) || (task === 'image' && ['aistudio', 'flow'].includes(selected) && model === IMAGE_MODEL) || (selected === 'hark' && model === HARK_MODEL))) throw new Error('该任务没有此显式型号选项');
+  if (selected === 'flow') return {provider: selected, model: IMAGE_MODEL, modelLabel: FLOW_IMAGE_MODEL_LABEL, count: 2, aspectRatios: FLOW_IMAGE_RATIOS};
   if (selected === 'hark') {
     return {
       provider: selected,
@@ -166,6 +176,14 @@ export function validateImageSettings({model, resolution, aspectRatio}) {
   if (!IMAGE_SIZES.includes(resolution)) throw new Error('AI Studio 生图分辨率只允许 2K 或 4K');
   if (!IMAGE_RATIOS.includes(aspectRatio)) throw new Error('生图必须明确选择已核对的比例，不使用 Auto');
   return {model, resolution, aspectRatio};
+}
+
+export function validateFlowImageSettings({model, aspectRatio, count = 2, resolution, thinking}) {
+  if (model !== IMAGE_MODEL) throw new Error('Flow 生图只允许 Nano Banana 2.1');
+  if (!FLOW_IMAGE_RATIOS.includes(aspectRatio)) throw new Error('Flow 必须从五种比例中明确选择：16:9、4:3、1:1、3:4、9:16');
+  if (!FLOW_IMAGE_COUNTS.includes(count)) throw new Error('Flow 按用户要求每批只允许 2、3 或 4 张');
+  if (resolution !== undefined || thinking !== undefined) throw new Error('Flow 当前没有生成分辨率或思考等级控件；2K/4K 是下载高清重塑选项');
+  return {model, aspectRatio, count};
 }
 
 export function optionValues(requested) {

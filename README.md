@@ -19,10 +19,15 @@
 | 批量抽取字段、分类和固定格式整理 | Codex CLI（默认） | GPT-6 Luna / 低 `low` |
 | 代码视频和强动效 | Hark | Claude Opus 5.5，[新项目优先，普通聊天兜底](references/hark.md) |
 | 前端审美与视觉设计 | AI Studio 或 Hark | Gemini 3.1 Pro / High 或 Claude Opus 5.5 |
-| 生图和图片编辑 | AI Studio | Nano Banana 2.1，支持 2K / 4K 和指定比例 |
+| 生图和图片编辑 | AI Studio（默认）<br>Google Flow（可选） | AI Studio：Nano Banana 2.1，支持原生 2K / 4K 和 14 种比例<br>Flow：同型号，每次出 2–4 张、5 种常用比例与 2K / 4K 高清重塑下载，[使用说明](references/flow.md) |
 | 指定的设计或综合分析 | Kimi 或智谱 | Kimi K3 或 GLM-5.3，均用极致档 |
 
-点名 Claude 做设计或代码也走 Hark。同一任务改稿沿用原项目。 [Codex CLI 调用方式](references/codex-cli.md)
+点名 Claude 做设计或代码也走 Hark。同一任务改稿沿用原项目。[Codex CLI 调用方式](references/codex-cli.md)
+
+### 生图双渠道：AI Studio 与 Google Flow
+
+- **AI Studio（默认）**：适合需要原生 **2K / 4K** 分辨率、**14 种比例**（含 `21:9`、`2:3`、`4:5` 等）以及 `High` 思考强度的生图与改图任务，精确锁定 `gemini-nano-banana-2.1`。
+- **Google Flow（点名或提供项目链接时启用）**：适合一次批量生成 **2–4 张**图对比选稿（默认 2 张），每次生成主动选定并回读 `Nano Banana 2.1`，支持 `16:9`、`4:3`、`1:1`、`3:4`、`9:16` 五种常用比例；生成完成后可按 **1K 原始尺寸** 或 **2K / 4K 高清重塑** 下载（可用规格取决于当前账号权限）。两个渠道相互独立，未点名 Flow 时默认走 AI Studio，不自动互换。详情见 [Flow 生图说明](references/flow.md)。
 
 ## 环境准备
 
@@ -30,7 +35,7 @@
 
 | 安装要求 | 工具或账号 | 什么时候需要 | 官方入口 |
 |---|---|---|---|
-| **必装** | Ego Lite | 让助手操作 AI Studio、Hark 等网页 | [下载 Ego Lite](https://lite.ego.app/download) · [Windows 安装指南](https://lite.ego.app/document/en/docs/windows/quick-start) |
+| **必装** | Ego Lite | 让助手操作 AI Studio、Google Flow、Hark 等网页 | [下载 Ego Lite](https://lite.ego.app/download) · [Windows 安装指南](https://lite.ego.app/document/en/docs/windows/quick-start) |
 | **必装** | `ego-browser` 技能 | 随 Ego Lite 首次设置安装。完成后重开助手，确认能选到 `ego-browser` | [启用浏览器技能](https://lite.ego.app/document/en/docs/skills#load-the-browser-skill) |
 | **推荐选装** | Antigravity CLI（`agy`） | 账号支持推荐模型时，优先用 CLI 做文案、评审和复杂编程。装好后运行 `agy` 登录 | [CLI 官方安装步骤](https://antigravity.google/docs/getting-started?tab=cli#download-and-install) |
 | 按需安装 | Codex CLI（`codex`） | 选择 GPT 渠道或使用 Luna 整理数据时需要。安装后运行 `codex login`，用 `codex login status` 核对登录 | [Codex CLI 官方文档](https://learn.chatgpt.com/docs/codex/cli) |
@@ -62,6 +67,7 @@ Codex 也可以放在 `$HOME/.codex/skills/lsf-ai-agent`。本地如果已经改
 使用 $lsf-ai-agent，让 Codex CLI 用 Sol 排查这次回归，用 Astra 给出复杂架构方案。
 使用 $lsf-ai-agent，这次我复制粘贴中转，请给我一份完整的 Gemini 交接提示。
 使用 $lsf-ai-agent，在 AI Studio 生成 16:9、2K 的图片。
+使用 $lsf-ai-agent，用 Flow 生成 4 张 3:4 竖版产品图，按 2K 高清重塑下载。
 ```
 
 ### 贞贞 API（可选）

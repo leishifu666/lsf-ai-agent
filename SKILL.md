@@ -1,6 +1,6 @@
 ---
 name: lsf-ai-agent
-description: 委派外部模型并在原项目验证。Codex CLI 使用 GPT-6.2 Sol 极高做实现和疑难排查，GPT-6.2 Astra 极高做复杂架构和 3D 方案，GPT-6 Luna 做批量整理。文案和文档交给 Gemini 或 Claude。Antigravity CLI 的 Gemini 4 Hydrogen / High 负责日常文案、文档和评审，Neon / High 负责复杂编程方案，支持 AI Studio 额度兜底。Hark 的 Claude Opus 5.5 负责代码视频与强动效，也是前端审美的可选渠道。支持 DeepSeek、Kimi、智谱、用户中转、可选贞贞 API 和 AI Studio 生图。仅修改技能时不发送模型任务。
+description: 委派外部模型并在原项目验证。Codex CLI 使用 GPT-6.2 Sol 极高做实现和疑难排查，GPT-6.2 Astra 极高做复杂架构和 3D 方案，GPT-6 Luna 做批量整理。文案和文档交给 Gemini 或 Claude。Antigravity CLI 的 Gemini 4 Hydrogen / High 负责日常文案、文档和评审，Neon / High 负责复杂编程方案，支持 AI Studio 额度兜底。Hark 的 Claude Opus 5.5 负责代码视频与强动效，也是前端审美的可选渠道。支持 DeepSeek、Kimi、智谱、用户中转、可选贞贞 API，以及 AI Studio 和 Google Flow 的 Nano Banana 2.1 生图。仅修改技能时不发送模型任务。
 license: MIT
 ---
 
@@ -23,11 +23,11 @@ license: MIT
 | 普通问答 | 当前已选产品；未指定时 DeepSeek | DeepSeek 仍须双开；明确使用 Gemini 时用 CLI Hydrogen / High |
 | 明确选择智谱的问答或综合分析 | GLM-5.3 / 极致 | 核对联网开关及真实检索引用；不自动降级为 GLM-Flash |
 | 批量字段抽取、分类与固定格式整理 | Codex CLI 的 GPT-6 Luna / low | 适用于已有材料和明确输出规则的任务 |
-| 图片生成、图片编辑 | AI Studio Nano Banana 2.1 | 仅 2K 或 4K；明确比例；默认 High |
+| 图片生成、图片编辑 | AI Studio Nano Banana 2.1；可选 Google Flow 同型号渠道 | AI Studio：仅 2K / 4K、明确比例、默认 High。Flow：每批 2–4 张、默认 2 张，5 种常用比例，见 [Flow](references/flow.md) |
 
 型号、思考档位和额度以当前账号为准。只有当前型号额度耗尽或明确不可用，且本轮已结束并无有效结果时，才沿表内顺序切换。每个入口和型号组合在同一轮只提交一次。
 
-用户点名 Claude、Opus 或 Hark 做文案、文档、评审、复杂编程或前端时，走 [Hark](references/hark.md)。使用当前账号已配置的默认 Claude Opus 5.5，核对项目和本轮提交状态。
+用户点名 Flow 或提供 Flow 项目链接时走 [Flow](references/flow.md)；未指定生图渠道时保留 AI Studio 默认，不因故障自动互换生图渠道。用户点名 Claude、Opus 或 Hark 做文案、文档、评审、复杂编程或前端时，走 [Hark](references/hark.md)。使用当前账号已配置的默认 Claude Opus 5.5，核对项目和本轮提交状态。
 
 普通 Gemini 网页 `gemini.google.com/app` 在此配置中禁用。Midjourney 只准备提示词与人工提交材料，见 [人工交接](references/midjourney.md)。
 
@@ -59,12 +59,13 @@ Codex CLI 使用本机已有的 ChatGPT 登录。任务路由和调用见 [Codex
 | Codex CLI | `codex exec` | [任务分工、推理档位和调用](references/codex-cli.md) |
 | Antigravity CLI | `agy` | [精确型号、调用与额度兜底](references/antigravity.md) |
 | Google AI Studio | `https://aistudio.google.com/prompts/new_chat` | [模型、思考、联网、比例与分辨率](references/aistudio.md) |
+| Google Flow | `https://flow.google.com/`（优先用户项目链接） | [Nano Banana 2.1、2–4 张、五种比例与高清重塑下载](references/flow.md) |
 | Hark | `https://hark.com/projects/new` | [Claude Opus 5.5、代码视频、强动效与普通聊天兜底](references/hark.md) |
 | DeepSeek | `https://chat.deepseek.com/` | [深度思考与智能搜索](references/deepseek.md) |
 | Kimi | `https://www.kimi.com/` | [K3、思考强度与工具](references/kimi.md) |
 | 智谱清言 | `https://chatglm.cn/` | [GLM-5.3、极致与联网](references/zhipu.md) |
 
-路由与图片约束在 `scripts/browser_policy.mjs`。GPT 用 `taskRoute(task, {provider:'codex'})`，可传明确的 `model`。Antigravity CLI 路由包含主模型和有序的 `fallbacks`。AI Studio 与 DeepSeek 页面辅助分别为 `scripts/aistudio_browser.mjs`、`scripts/deepseek_browser.mjs`，由调用者传入现有 Page。Hark、Kimi、智谱按实际页面操作。
+路由与图片约束在 `scripts/browser_policy.mjs`。GPT 用 `taskRoute(task, {provider:'codex'})`，可传明确的 `model`。Antigravity CLI 路由包含主模型和有序的 `fallbacks`。AI Studio 与 DeepSeek 页面辅助分别为 `scripts/aistudio_browser.mjs`、`scripts/deepseek_browser.mjs`，由调用者传入现有 Page。Flow 用 `taskRoute('image', {provider:'flow'})` 与 `validateFlowImageSettings`，AI Studio 生图用 `validateImageSettings`。Hark、Kimi、智谱按实际页面操作。
 
 ## 委派和回收
 
@@ -80,9 +81,12 @@ Codex CLI 使用本机已有的 ChatGPT 登录。任务路由和调用见 [Codex
 
 ## 图片约束
 
-AI Studio 必须精确选 `gemini-nano-banana-2.1`；不换近似型号。分辨率只能 2K/4K，比例按用途明确选择；未指定时采用适当比例并说明，默认可用 1:1。生成前后回读型号、比例、分辨率与思考。
+两渠道均固定 Nano Banana 2.1，不换近似型号；型号以真实选择控件为准，模型自述不能证明版本身份。
 
-等待 Stop 消失、Run 恢复，再核对最终原图像素。首张低分辨率预览不算成品。保存后检查 MIME、扩展名、尺寸与画面。未提供指定规格时停止依赖该规格的生图请求，不自动替换。
+- **AI Studio**：精确选 `gemini-nano-banana-2.1`；分辨率只选 2K / 4K，不用 1K；比例按用途明确选择，未指定时采用适当比例并说明，默认可用 1:1。生成前后回读型号、比例、分辨率与思考。等待 Stop 消失、Run 恢复，低分辨率预览不算最终原图，见 [AI Studio](references/aistudio.md)。
+- **Google Flow**：每批 2–4 张（默认 2 张）、每轮重选并回读 `Nano Banana 2.1`；仅从 `16:9`、`4:3`、`1:1`、`3:4`、`9:16` 五种比例中选择。生成面板没有分辨率或思考等级控件，不伪造 2K/4K/High 设置；下载规格中的 1K 为原始尺寸，2K/4K 标为“已高清重塑”，默认尝试 2K 下载并核验像素，不把高清重塑称为原生 2K/4K，不付费升级。见 [Flow](references/flow.md)。
+
+保存后检查 MIME、扩展名、真实像素与画面，逐张对应本轮结果。未提供指定型号或规格时停止依赖该规格的生图请求，不自动替换。
 
 ## 附件与用户中转
 
@@ -93,4 +97,4 @@ AI Studio 必须精确选 `gemini-nano-banana-2.1`；不换近似型号。分辨
 
 ## 失败与恢复
 
-区分登录、验证码、拥堵、额度、内部错误、工具超时、生成中与明确拒绝。保留提交证据，不盲目重发；用户接管时停止浏览器操作，明确恢复后再继续。具体见 [恢复规则](references/recovery.md)。旧普通 Gemini 网页保持 [禁用](references/browser.md)。
+区分登录、验证码、拥堵、额度、内部错误、工具超时、生成中与明确拒绝。保留提交证据，不盲目重发；Flow 出现“异常活动”时，按 [Flow 恢复步骤](references/flow.md#异常活动提示的恢复)在原项目正常刷新一次并核对本轮状态，不立即换渠道；用户接管时停止浏览器操作，明确恢复后再继续。具体见 [恢复规则](references/recovery.md)。旧普通 Gemini 网页保持 [禁用](references/browser.md)。
