@@ -10,27 +10,19 @@
 
 ## 平时怎么分工
 
-| 任务 | 默认渠道 | 模型与设置 |
+| 任务 | 渠道 | 模型与设置 |
 |---|---|---|
-| 文案、文档与评审 | Antigravity CLI | Gemini 4 Hydrogen / High，额度用完切 AI Studio Hydrogen / High。点名 Claude 时走 Hark |
+| 文案、文档与评审 | Antigravity CLI（默认）<br>Hark（点名 Claude） | Gemini 4 Hydrogen / High，额度用完切 AI Studio Hydrogen / High<br>Claude Opus 5.5 |
+| 前端实现、常规编码和修复 | DeepSeek（默认）<br>Codex CLI（点名 GPT） | DeepSeek 开启深度思考和智能搜索<br>GPT-6.2 Sol / 极高 `xhigh`，也负责疑难问题的排查与跟进 |
 | 复杂编程方案 | Antigravity CLI | Gemini 4 Neon / High，[额度用尽时按顺序切换](references/antigravity.md#额度用尽时) |
+| 复杂架构设计、技术方案权衡和 3D 建模方案 | Codex CLI（点名 GPT） | GPT-6.2 Astra / 极高 `xhigh` |
+| 批量抽取字段、分类和固定格式整理 | Codex CLI（默认） | GPT-6 Luna / 低 `low` |
 | 代码视频和强动效 | Hark | Claude Opus 5.5，[新项目优先，普通聊天兜底](references/hark.md) |
 | 前端审美与视觉设计 | AI Studio 或 Hark | Gemini 3.1 Pro / High 或 Claude Opus 5.5 |
-| 前端实现、常规编码和修复 | DeepSeek | 开启深度思考和智能搜索 |
 | 生图和图片编辑 | AI Studio | Nano Banana 2.1，支持 2K / 4K 和指定比例 |
 | 指定的设计或综合分析 | Kimi 或智谱 | Kimi K3 或 GLM-5.3，均用极致档 |
 
-点名 Claude 做设计、代码、文案、文档或评审，也走 Hark。同一任务改稿沿用原项目。
-
-### Codex CLI 分工
-
-| 模型 | 档位 | 任务 |
-|---|---|---|
-| GPT-6.2 Sol | 极高 `xhigh` | Codex 渠道的日常主力，负责常规编码、修 Bug、疑难问题排查与跟进 |
-| GPT-6.2 Astra | 极高 `xhigh` | 复杂架构设计、技术方案权衡和 3D 建模方案 |
-| GPT-6 Luna | 低 `low` | 批量抽取字段、分类和固定格式整理 |
-
-点名 GPT 或 Codex CLI 即可选择这个渠道。批量抽取与固定格式整理默认走 Luna。文案与文档交给 Gemini 或 Claude。 [调用方式](references/codex-cli.md)
+点名 Claude 做设计或代码也走 Hark。同一任务改稿沿用原项目。 [Codex CLI 调用方式](references/codex-cli.md)
 
 ## 环境准备
 
