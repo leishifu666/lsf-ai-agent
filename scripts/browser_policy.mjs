@@ -23,9 +23,26 @@ export const ANTIGRAVITY_MODELS = Object.freeze({
 const ANTIGRAVITY_TASK_MODELS = Object.freeze({
   code: ANTIGRAVITY_MODELS.neon,
   complex: ANTIGRAVITY_MODELS.neon,
+  architecture: ANTIGRAVITY_MODELS.neon,
   copywriting: ANTIGRAVITY_MODELS.hydrogen,
   copy_review: ANTIGRAVITY_MODELS.hydrogen,
+  document: ANTIGRAVITY_MODELS.hydrogen,
   chat: ANTIGRAVITY_MODELS.hydrogen,
+});
+const CODEX_MODELS = Object.freeze({
+  astra: 'gpt-6.2-astra',
+  sol: 'gpt-6.2-sol',
+  luna: 'gpt-6-luna',
+  previousSol: 'gpt-6.1-sol',
+});
+const CODEX_TASKS = Object.freeze({
+  chat: CODEX_MODELS.sol,
+  code: CODEX_MODELS.sol,
+  frontend: CODEX_MODELS.sol,
+  complex: CODEX_MODELS.sol,
+  design: CODEX_MODELS.astra,
+  architecture: CODEX_MODELS.astra,
+  extraction: CODEX_MODELS.luna,
 });
 export const AISTUDIO_MODELS = Object.freeze({
   pro: 'gemini-3.1-pro-preview',
@@ -47,8 +64,8 @@ export function browserEntry(provider = 'aistudio') {
 // AI Studio catalog IDs; the CLI uses its own High model IDs.
 export function geminiModelForTask(task) {
   if (['frontend', 'design'].includes(task)) return AISTUDIO_MODELS.pro;
-  if (['chat', 'copywriting', 'copy_review'].includes(task)) return AISTUDIO_MODELS.hydrogen;
-  if (['code', 'complex'].includes(task)) return AISTUDIO_MODELS.neon;
+  if (['chat', 'copywriting', 'copy_review', 'document'].includes(task)) return AISTUDIO_MODELS.hydrogen;
+  if (['code', 'complex', 'architecture'].includes(task)) return AISTUDIO_MODELS.neon;
   if (task === 'image') return IMAGE_MODEL;
   throw new Error('未知 Gemini 任务类型');
 }
@@ -59,8 +76,11 @@ export function taskRoute(task, {provider, model} = {}) {
     frontend: 'deepseek',
     copywriting: 'antigravity',
     copy_review: 'antigravity',
+    document: 'antigravity',
     code: 'deepseek',
     complex: 'antigravity',
+    architecture: 'antigravity',
+    extraction: 'codex',
     chat: 'deepseek',
     image: 'aistudio',
     video: 'hark',
@@ -69,10 +89,12 @@ export function taskRoute(task, {provider, model} = {}) {
   if (!Object.hasOwn(defaults, task)) throw new Error('未知任务类型');
   const antigravityModel = Object.values(ANTIGRAVITY_MODELS).includes(model);
   const studioTextModel = Object.values(AISTUDIO_MODELS).includes(model);
+  const codexModel = Object.values(CODEX_MODELS).includes(model);
   let selected = provider;
   if (!selected && model === HARK_MODEL) selected = 'hark';
   if (!selected && antigravityModel) selected = 'antigravity';
   if (!selected && studioTextModel) selected = 'aistudio';
+  if (!selected && codexModel) selected = 'codex';
   selected ||= defaults[task];
   if (task === 'image' && (selected !== 'aistudio' || (model && model !== IMAGE_MODEL))) {
     throw new Error('生图只使用 AI Studio Nano Banana 2.1');
@@ -80,11 +102,24 @@ export function taskRoute(task, {provider, model} = {}) {
   if (['video', 'motion'].includes(task) && selected !== 'hark') {
     throw new Error('代码视频和强动效的委派入口为 Hark');
   }
+  if (['copywriting', 'copy_review', 'document'].includes(task) && !['antigravity', 'aistudio', 'hark'].includes(selected)) {
+    throw new Error('文案和文档请指定 Gemini 或 Claude 的入口和型号');
+  }
+  if (selected === 'codex') {
+    if (!Object.hasOwn(CODEX_TASKS, task)) throw new Error('这类任务未配置 Codex CLI');
+    if (model && !codexModel) throw new Error('Codex CLI 未配置此 GPT 型号');
+    const primary = model || CODEX_TASKS[task];
+    return {
+      provider: selected,
+      model: primary,
+      thinking: primary === CODEX_MODELS.luna ? 'low' : 'xhigh',
+    };
+  }
   if (selected === 'antigravity') {
     if (!Object.hasOwn(ANTIGRAVITY_TASK_MODELS, task)) throw new Error('这类任务未配置 Antigravity CLI');
     if (model && !antigravityModel) throw new Error('Antigravity CLI 只使用已配置的 High 型号');
     const primary = model || ANTIGRAVITY_TASK_MODELS[task];
-    const fallbacks = ['code', 'complex'].includes(task)
+    const fallbacks = ANTIGRAVITY_TASK_MODELS[task] === ANTIGRAVITY_MODELS.neon
       ? [
           {provider: 'antigravity', model: ANTIGRAVITY_MODELS.argon},
           {provider: 'aistudio', model: AISTUDIO_MODELS.neon},

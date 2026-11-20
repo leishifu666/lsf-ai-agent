@@ -1,6 +1,6 @@
 ---
 name: lsf-ai-agent
-description: 委派外部模型并在原项目验证。Antigravity CLI 的 Gemini 4 Hydrogen / High 负责日常文案和评审，Neon / High 负责复杂编程方案，支持 AI Studio 额度兜底。Hark 的 Claude Opus 5.5 负责代码视频与强动效，也是前端审美的可选渠道。支持 DeepSeek、Kimi、智谱、用户中转、可选贞贞 API 和 AI Studio 生图。仅修改技能时不发送模型任务。
+description: 委派外部模型并在原项目验证。Codex CLI 使用 GPT-6.2 Sol 极高做实现和疑难排查，GPT-6.2 Astra 极高做复杂架构和 3D 方案，GPT-6 Luna 做批量整理。文案和文档交给 Gemini 或 Claude。Antigravity CLI 的 Gemini 4 Hydrogen / High 负责日常文案、文档和评审，Neon / High 负责复杂编程方案，支持 AI Studio 额度兜底。Hark 的 Claude Opus 5.5 负责代码视频与强动效，也是前端审美的可选渠道。支持 DeepSeek、Kimi、智谱、用户中转、可选贞贞 API 和 AI Studio 生图。仅修改技能时不发送模型任务。
 license: MIT
 ---
 
@@ -16,23 +16,34 @@ license: MIT
 |---|---|---|
 | 代码视频、强动效与动态视觉 | Hark 的 Claude Opus 5.5 | 新项目优先，项目提交失败时切普通聊天 |
 | 视觉方向、前端审美、版式、设计审查 | AI Studio Gemini 3.1 Pro / High | 可明确选择 Hark 的 Claude Opus 5.5，或 Kimi K3 / 极致 |
-| 日常文案、改写、标题、营销文字、UX 文本与文案评审 | Antigravity CLI 的 Gemini 4 Hydrogen / High | CLI 额度用尽后切 AI Studio Hydrogen / High |
+| 文案、文档的撰写、改写与评审 | Antigravity CLI 的 Gemini 4 Hydrogen / High | CLI 额度用尽后切 AI Studio Hydrogen / High，点名 Claude 时用 Hark |
 | 前端实现、UI/CSS、响应式与交互代码 | DeepSeek | 深度思考与智能搜索同时开启；可明确选择 Kimi K3 / 极致 |
 | 复杂编程方案、架构、技术选型与疑难工程分析 | Antigravity CLI 的 Gemini 4 Neon / High | CLI Neon → CLI Argon → AI Studio Neon → AI Studio Argon → CLI Hydrogen，均为 High |
 | 常规编码、后端实现与根因修复落地 | DeepSeek | 深度思考与智能搜索同时开启；明确选择 Gemini 或 CLI 时用 Neon / High |
 | 普通问答 | 当前已选产品；未指定时 DeepSeek | DeepSeek 仍须双开；明确使用 Gemini 时用 CLI Hydrogen / High |
-| 明确选择智谱的文案/综合任务 | GLM-5.3 / 极致 | 核对联网开关及真实检索引用；不自动降级为 GLM-Flash |
+| 明确选择智谱的问答或综合分析 | GLM-5.3 / 极致 | 核对联网开关及真实检索引用；不自动降级为 GLM-Flash |
+| 批量字段抽取、分类与固定格式整理 | Codex CLI 的 GPT-6 Luna / low | 适用于已有材料和明确输出规则的任务 |
 | 图片生成、图片编辑 | AI Studio Nano Banana 2.1 | 仅 2K 或 4K；明确比例；默认 High |
 
 型号、思考档位和额度以当前账号为准。只有当前型号额度耗尽或明确不可用，且本轮已结束并无有效结果时，才沿表内顺序切换。每个入口和型号组合在同一轮只提交一次。
 
-用户点名 Claude、Opus 或 Hark 做文案、评审、复杂编程或前端时，走 [Hark](references/hark.md)。使用当前账号已配置的默认 Claude Opus 5.5，核对项目和本轮提交状态。
+用户点名 Claude、Opus 或 Hark 做文案、文档、评审、复杂编程或前端时，走 [Hark](references/hark.md)。使用当前账号已配置的默认 Claude Opus 5.5，核对项目和本轮提交状态。
 
 普通 Gemini 网页 `gemini.google.com/app` 在此配置中禁用。Midjourney 只准备提示词与人工提交材料，见 [人工交接](references/midjourney.md)。
+
+## Codex CLI 分工
+
+- **GPT-6.2 Sol / 极高（`xhigh`）**是 Codex 渠道的日常主力，负责常规编码、前端实现、修 Bug、疑难故障的根因排查与跟进。
+- **GPT-6.2 Astra / 极高（`xhigh`）**负责复杂架构设计、技术方案权衡与 3D 建模方案。需要继续实施架构方案时，由 Sol 承接编码和修复。
+- **GPT-6 Luna / 低（`low`）**负责批量抽取字段、分类和固定格式整理。
+- **Gemini 或 Claude**负责文案、文档的撰写、改写和评审。
+
+Codex CLI 使用本机已有的 ChatGPT 登录。任务路由和调用见 [Codex CLI](references/codex-cli.md)。
 
 ## 交接方式
 
 - **Antigravity CLI**：直接调用已登录的 `agy`，锁定具体 High 型号并读取最终结果。见 [CLI 操作与额度兜底](references/antigravity.md)。
+- **Codex CLI**：点名 GPT 渠道或处理表中分配给 Luna 的整理任务时，用已登录的 `codex exec`。按任务锁定型号和档位，默认只读，回收最终答复并在原项目验证。
 - **浏览器**：按当前环境已安装的浏览器技能和工具文档操作。用户明确指定浏览器时遵循；登录和验证码交还用户，不代填凭据。
 - **用户中转**：用户说“我来转、复制粘贴、发给我”时，只提供完整交接材料，不启动浏览器或 API，沿用直到用户切换。
 - **贞贞 API**：仅在用户明确选择 API 或已有明确授权时使用；见 [API 契约](references/runtime.md)。使用者自行配置自己的凭据；不把其他网页模型请求发往此 API。
@@ -45,6 +56,7 @@ license: MIT
 
 | 产品 | 入口 | 说明 |
 |---|---|---|
+| Codex CLI | `codex exec` | [任务分工、推理档位和调用](references/codex-cli.md) |
 | Antigravity CLI | `agy` | [精确型号、调用与额度兜底](references/antigravity.md) |
 | Google AI Studio | `https://aistudio.google.com/prompts/new_chat` | [模型、思考、联网、比例与分辨率](references/aistudio.md) |
 | Hark | `https://hark.com/projects/new` | [Claude Opus 5.5、代码视频、强动效与普通聊天兜底](references/hark.md) |
@@ -52,7 +64,7 @@ license: MIT
 | Kimi | `https://www.kimi.com/` | [K3、思考强度与工具](references/kimi.md) |
 | 智谱清言 | `https://chatglm.cn/` | [GLM-5.3、极致与联网](references/zhipu.md) |
 
-路由与图片约束在 `scripts/browser_policy.mjs`。`taskRoute` 的 CLI 路由包含主模型和有序的 `fallbacks`。AI Studio 与 DeepSeek 页面辅助分别为 `scripts/aistudio_browser.mjs`、`scripts/deepseek_browser.mjs`，由调用者传入现有 Page。Hark、Kimi、智谱按实际页面操作。
+路由与图片约束在 `scripts/browser_policy.mjs`。GPT 用 `taskRoute(task, {provider:'codex'})`，可传明确的 `model`。Antigravity CLI 路由包含主模型和有序的 `fallbacks`。AI Studio 与 DeepSeek 页面辅助分别为 `scripts/aistudio_browser.mjs`、`scripts/deepseek_browser.mjs`，由调用者传入现有 Page。Hark、Kimi、智谱按实际页面操作。
 
 ## 委派和回收
 

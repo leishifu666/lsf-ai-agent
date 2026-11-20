@@ -12,15 +12,25 @@
 
 | 任务 | 默认渠道 | 模型与设置 |
 |---|---|---|
-| 文案和评审 | Antigravity CLI | Gemini 4 Hydrogen / High，额度用完切 AI Studio Hydrogen / High |
+| 文案、文档与评审 | Antigravity CLI | Gemini 4 Hydrogen / High，额度用完切 AI Studio Hydrogen / High。点名 Claude 时走 Hark |
 | 复杂编程方案 | Antigravity CLI | Gemini 4 Neon / High，[额度用尽时按顺序切换](references/antigravity.md#额度用尽时) |
 | 代码视频和强动效 | Hark | Claude Opus 5.5，[新项目优先，普通聊天兜底](references/hark.md) |
 | 前端审美与视觉设计 | AI Studio 或 Hark | Gemini 3.1 Pro / High 或 Claude Opus 5.5 |
 | 前端实现、常规编码和修复 | DeepSeek | 开启深度思考和智能搜索 |
 | 生图和图片编辑 | AI Studio | Nano Banana 2.1，支持 2K / 4K 和指定比例 |
-| 指定的设计、文案或综合任务 | Kimi 或智谱 | Kimi K3 或 GLM-5.3，均用极致档 |
+| 指定的设计或综合分析 | Kimi 或智谱 | Kimi K3 或 GLM-5.3，均用极致档 |
 
-点名 Claude 做设计、代码、文案或评审，也走 Hark。同一任务改稿沿用原项目。
+点名 Claude 做设计、代码、文案、文档或评审，也走 Hark。同一任务改稿沿用原项目。
+
+### Codex CLI 分工
+
+| 模型 | 档位 | 任务 |
+|---|---|---|
+| GPT-6.2 Sol | 极高 `xhigh` | Codex 渠道的日常主力，负责常规编码、修 Bug、疑难问题排查与跟进 |
+| GPT-6.2 Astra | 极高 `xhigh` | 复杂架构设计、技术方案权衡和 3D 建模方案 |
+| GPT-6 Luna | 低 `low` | 批量抽取字段、分类和固定格式整理 |
+
+点名 GPT 或 Codex CLI 即可选择这个渠道。批量抽取与固定格式整理默认走 Luna。文案与文档交给 Gemini 或 Claude。 [调用方式](references/codex-cli.md)
 
 ## 环境准备
 
@@ -31,6 +41,7 @@
 | **必装** | Ego Lite | 让助手操作 AI Studio、Hark 等网页 | [下载 Ego Lite](https://lite.ego.app/download) · [Windows 安装指南](https://lite.ego.app/document/en/docs/windows/quick-start) |
 | **必装** | `ego-browser` 技能 | 随 Ego Lite 首次设置安装。完成后重开助手，确认能选到 `ego-browser` | [启用浏览器技能](https://lite.ego.app/document/en/docs/skills#load-the-browser-skill) |
 | **推荐选装** | Antigravity CLI（`agy`） | 账号支持推荐模型时，优先用 CLI 做文案、评审和复杂编程。装好后运行 `agy` 登录 | [CLI 官方安装步骤](https://antigravity.google/docs/getting-started?tab=cli#download-and-install) |
+| 按需安装 | Codex CLI（`codex`） | 选择 GPT 渠道或使用 Luna 整理数据时需要。安装后运行 `codex login`，用 `codex login status` 核对登录 | [Codex CLI 官方文档](https://learn.chatgpt.com/docs/codex/cli) |
 | 按需账号 | Google AI Pro / Ultra | 使用推荐的 CLI Gemini 4 模型时，个人账号建议用正式付费的 Pro 或 Ultra。用 `agy models` 确认可用型号 | [Google AI 会员方案](https://one.google.com/about/google-ai-plans/) · [CLI 模型权限](https://antigravity.google/docs/models) |
 | 按需安装 | Git | 用下方的 `git clone` 安装技能时需要 | [下载 Git](https://git-scm.com/downloads/) |
 | 按需安装 | Node.js 18+ | 运行本地 JavaScript 脚本或测试，脚本只用 Node.js 内置模块 | [下载 Node.js](https://nodejs.org/en/download) |
@@ -56,6 +67,7 @@ Codex 也可以放在 `$HOME/.codex/skills/lsf-ai-agent`。本地如果已经改
 
 ```text
 使用 $lsf-ai-agent，让 Gemini 4 Neon 给出当前项目的重构方案。
+使用 $lsf-ai-agent，让 Codex CLI 用 Sol 排查这次回归，用 Astra 给出复杂架构方案。
 使用 $lsf-ai-agent，这次我复制粘贴中转，请给我一份完整的 Gemini 交接提示。
 使用 $lsf-ai-agent，在 AI Studio 生成 16:9、2K 的图片。
 ```

@@ -13,7 +13,7 @@ test('The browser entry defaults to AI Studio and disabled websites cannot be au
 });
 test('AI Studio uses its own catalog IDs',()=>{
   for(const task of ['frontend','design'])assert.equal(geminiModelForTask(task),'gemini-3.1-pro-preview');
-  for(const task of ['copywriting','copy_review','chat'])assert.equal(geminiModelForTask(task),'gemini-4-hydrogen');
+  for(const task of ['copywriting','copy_review','document','chat'])assert.equal(geminiModelForTask(task),'gemini-4-hydrogen');
   assert.equal(geminiModelForTask('complex'),'gemini-4-neon');
   assert.equal(geminiModelForTask('image'),IMAGE_MODEL);
 });
@@ -70,7 +70,7 @@ test('User task routing separates visual design, implementation and copywriting'
   assert.equal(taskRoute('design').model,'gemini-3.1-pro-preview');
   assert.equal(taskRoute('frontend').provider,'deepseek');
   assert.equal(taskRoute('code').provider,'deepseek');
-  for (const task of ['copywriting','copy_review']) {
+  for (const task of ['copywriting','copy_review','document']) {
     assert.deepEqual(taskRoute(task), {
       provider: 'antigravity', model: 'gemini-4-hydrogen-high', thinking: 'High',
       fallbacks: [{provider: 'aistudio', model: 'gemini-4-hydrogen', thinking: 'High'}],
@@ -82,9 +82,41 @@ test('User task routing separates visual design, implementation and copywriting'
   assert.throws(()=>taskRoute('image',{provider:'kimi'}),/生图/);
   assert.throws(()=>taskRoute('unknown'),/未知任务/);
   assert.equal(taskRoute('design',{provider:'kimi'}).model,'K3');
-  assert.equal(taskRoute('copywriting',{provider:'zhipu'}).model,'GLM-5.3');
-  assert.equal(taskRoute('copywriting',{provider:'zhipu'}).thinking,'极致');
-  assert.equal(taskRoute('copywriting',{provider:'zhipu'}).search,'verify_switch_when_needed');
+  const zhipu = taskRoute('chat',{provider:'zhipu'});
+  assert.equal(zhipu.model,'GLM-5.3');
+  assert.equal(zhipu.thinking,'极致');
+  assert.equal(zhipu.search,'verify_switch_when_needed');
+});
+
+test('Codex uses Sol for implementation and debugging, Astra for design, and Luna for extraction',()=>{
+  for (const task of ['chat','code','frontend','complex']) {
+    assert.deepEqual(taskRoute(task,{provider:'codex'}),{
+      provider:'codex', model:'gpt-6.2-sol', thinking:'xhigh',
+    });
+  }
+  for (const task of ['design','architecture']) {
+    assert.deepEqual(taskRoute(task,{provider:'codex'}),{
+      provider:'codex', model:'gpt-6.2-astra', thinking:'xhigh',
+    });
+  }
+  assert.deepEqual(taskRoute('extraction'),{
+    provider:'codex', model:'gpt-6-luna', thinking:'low',
+  });
+  assert.equal(taskRoute('code',{model:'gpt-6.1-sol'}).model,'gpt-6.1-sol');
+  assert.throws(()=>taskRoute('image',{model:'gpt-6.2-astra'}),/生图/);
+  assert.throws(()=>taskRoute('motion',{provider:'codex'}),/Hark/);
+  assert.throws(()=>taskRoute('code',{provider:'codex',model:'unknown'}),/型号/);
+  assert.throws(()=>taskRoute('code',{provider:'hark',model:'gpt-6.2-sol'}),/型号/);
+});
+
+test('Copywriting, copy review, and document routes accept Gemini or Claude',()=>{
+  for (const task of ['copywriting','copy_review','document']) {
+    assert.equal(taskRoute(task,{provider:'aistudio'}).provider,'aistudio');
+    assert.equal(taskRoute(task,{model:HARK_MODEL}).provider,'hark');
+    assert.throws(()=>taskRoute(task,{model:'gpt-6.2-sol'}),/Gemini 或 Claude/);
+    assert.throws(()=>taskRoute(task,{provider:'codex'}),/Gemini 或 Claude/);
+    assert.throws(()=>taskRoute(task,{provider:'zhipu'}),/Gemini 或 Claude/);
+  }
 });
 
 test('Complex programming checks both CLI allowances before using AI Studio and the final CLI fallback',()=>{
@@ -99,6 +131,7 @@ test('Complex programming checks both CLI allowances before using AI Studio and 
   ]);
   assert.deepEqual(taskRoute('complex',{model:'gemini-4-argon-high'}).fallbacks, route.fallbacks.slice(1));
   assert.deepEqual(taskRoute('code',{provider:'antigravity'}), route);
+  assert.deepEqual(taskRoute('architecture'), route);
   assert.throws(()=>taskRoute('complex',{provider:'antigravity',model:'gemini-4-neon-xhigh'}),/High/);
 });
 
